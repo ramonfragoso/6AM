@@ -1,6 +1,5 @@
 import { Canvas, extend, type ThreeToJSXElements } from "@react-three/fiber"
 import type { ComponentProps } from "react"
-import WebGPU from "three/examples/jsm/capabilities/WebGPU.js"
 import type { WebGPURendererParameters } from "three/src/renderers/webgpu/WebGPURenderer.js"
 import * as THREE from "three/webgpu"
 
@@ -19,10 +18,9 @@ export function WebGPUCanvas(props: WebGPUCanvasProps) {
 async function createRenderer(defaultProps: object) {
   const renderer = new THREE.WebGPURenderer({
     ...(defaultProps as WebGPURendererParameters),
-    forceWebGL: !WebGPU.isAvailable(),
+    alpha: false,
+    reversedDepthBuffer: true,
   })
   await renderer.init()
-  renderer.outputColorSpace = THREE.SRGBColorSpace
-  renderer.toneMapping = THREE.ACESFilmicToneMapping
   return renderer
 }

@@ -1,12 +1,12 @@
 import { useHelper } from "@react-three/drei"
 import { useRef } from "react"
-import * as THREE from "three"
+import * as THREE from "three/webgpu"
 import { useDebugMode } from "@/debug/useDebugMode"
 import { useWorldTuning } from "./useWorldTuning"
 
 const DIRECTIONAL_LIGHT_POSITION: THREE.Vector3Tuple = [0, 5, 0]
 
-const SHADOW_CASTING = {
+const DIRECTIONAL_SHADOW = {
   castShadow: true,
   "shadow-mapSize-width": 2048,
   "shadow-mapSize-height": 2048,
@@ -16,6 +16,14 @@ const SHADOW_CASTING = {
   "shadow-camera-right": 22,
   "shadow-camera-top": 22,
   "shadow-camera-bottom": -22,
+}
+
+const POINT_SHADOW = {
+  castShadow: true,
+  "shadow-mapSize-width": 512,
+  "shadow-mapSize-height": 512,
+  "shadow-camera-near": 0.5,
+  "shadow-camera-far": 80,
 }
 
 export function Lights() {
@@ -40,14 +48,14 @@ export function Lights() {
         position={DIRECTIONAL_LIGHT_POSITION}
         intensity={lighting.directionalIntensity}
         color={lighting.directionalColor}
-        {...SHADOW_CASTING}
+        {...DIRECTIONAL_SHADOW}
       />
       <pointLight
         ref={pointLight}
         position={lighting.pointPosition}
         intensity={lighting.pointIntensity}
         color={lighting.pointColor}
-        {...SHADOW_CASTING}
+        {...POINT_SHADOW}
       />
     </>
   )
