@@ -21,11 +21,19 @@ Code is organized by feature, not by kind of file. `src/app` holds only routing.
 | ------------ | ------------------------------------------------------------------------------------------------- |
 | `src/app`    | `layout.tsx`, `page.tsx` (a server component rendering `<World />`), global CSS                   |
 | `src/world`  | `World` (client boundary: canvas, Leva panel, physics, orbit camera), WebGPU canvas, lights       |
-| `src/input`  | Input helpers shared across features, such as `useKeyHeld`                                        |
+| `src/input`  | Input helpers shared across features: `useKeyHeld` and `readGamepad`                              |
 | `src/tuning` | `useTuningControls` (Leva with saved defaults), Save/Revert buttons, `public/tuning.json` loading |
 | `src/debug`  | Debug mode toggle and the `slider` helper for Leva                                                |
 
 New features get their own folder (for example `src/player` or `src/enemy`) with their components and hooks together.
+
+## Input
+
+- `readGamepad()` (`input/gamepad.ts`) reads the first connected gamepad and returns a `GamepadState`: both sticks, both triggers and `pressed(button)`. With no gamepad it returns everything at rest, so callers never check for one.
+- Buttons are named by position (`south`, `east`, `west`, `north`, bumpers, d-pad, `select`, `start`, stick presses), not by a brand's letters.
+- Sticks are -1..1 with a deadzone, `x` positive to the right and `y` positive up (forward). Triggers are 0..1.
+- It handles both the browser's `standard` mapping and unmapped pads (Linux reports triggers as axes).
+- Gamepads are polled, not event driven: call `readGamepad()` inside `useFrame`, before the physics step (priority -1) when the result drives physics. Browsers only expose a gamepad after one of its buttons is pressed with the page open.
 
 ## Conventions
 
