@@ -1,0 +1,9 @@
+{
+  "Debug.enabled": false,
+  "Lighting.ambientIntensity": 4,
+  "Lighting.directionalColor": "#ffffff",
+  "Lighting.directionalIntensity": 2.1,
+  "Lighting.pointColor": "#626262",
+  "Lighting.pointIntensity": 500,
+  "Lighting.pointPosition": [2, 2, -1]
+}
