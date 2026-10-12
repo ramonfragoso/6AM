@@ -3,7 +3,7 @@ schema_version = "1.0.0"
 id = "granny_kit"
 version = "1.0.0"
 name = "Granny Kit Exporter"
-tagline = "Export the Modular Kit straight into the Granny Clone game"
+tagline = "Export the Modular Kit straight into the 6AM game"
 maintainer = "Ramon"
 type = "add-on"
 

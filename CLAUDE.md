@@ -1,4 +1,4 @@
-# Granny Clone
+# 6AM
 
 A 3D game built with Next.js 15, React 19, React Three Fiber, WebGPU and Rapier physics. The scene holds a Corridor built from the Kit (modular Pieces exported from Blender), a first-person Player and a DebugPlayer that Flies through everything, plus lights, the physics world, Leva Tuning and the Debug toggle.
 

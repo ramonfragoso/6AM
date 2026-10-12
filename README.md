@@ -1,4 +1,4 @@
-# Granny Clone
+# 6AM
 
 A 3D game built with Next.js, React Three Fiber, WebGPU and Rapier physics.
 

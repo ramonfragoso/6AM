@@ -33,10 +33,10 @@ const eslintConfig = [
   {
     plugins: {
       "@stylistic": stylistic,
-      "granny-clone": { rules: { "no-comments": noComments } },
+      "6am": { rules: { "no-comments": noComments } },
     },
     rules: {
-      "granny-clone/no-comments": "error",
+      "6am/no-comments": "error",
       "no-console": "warn",
       "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": "off",

@@ -3,7 +3,7 @@ import type { ReactNode } from "react"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "Granny Clone",
+  title: "6AM",
   description: "A 3D game built with React Three Fiber, WebGPU and Rapier.",
 }
 
