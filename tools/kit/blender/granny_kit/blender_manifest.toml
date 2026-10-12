@@ -1,0 +1,15 @@
+schema_version = "1.0.0"
+
+id = "granny_kit"
+version = "1.0.0"
+name = "Granny Kit Exporter"
+tagline = "Export the Modular Kit straight into the Granny Clone game"
+maintainer = "Ramon"
+type = "add-on"
+
+blender_version_min = "4.2.0"
+
+license = ["SPDX:GPL-3.0-or-later"]
+
+[permissions]
+files = "Write the exported kit into the game project"

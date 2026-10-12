@@ -28,7 +28,7 @@ const noComments = {
 const objectWrapping = { multiline: true, minProperties: 4 }
 
 const eslintConfig = [
-  { ignores: [".next/**", "node_modules/**", "next-env.d.ts"] },
+  { ignores: [".next/**", "node_modules/**", "next-env.d.ts", "public/basis/**"] },
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     plugins: {
@@ -56,6 +56,7 @@ const eslintConfig = [
       "@stylistic/object-property-newline": ["error", { allowAllPropertiesOnSameLine: true }],
     },
   },
+  { files: ["tools/**"], rules: { "no-console": "off" } },
 ]
 
 export default eslintConfig
