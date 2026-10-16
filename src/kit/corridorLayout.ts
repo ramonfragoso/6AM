@@ -40,7 +40,7 @@ const TILT_X_SEED = 3
 
 const TILT_Z_SEED = 4
 
-const FLOOR_OVERHANG_UNDER_DOOR = 0.54
+const FLOOR_OVERHANG_UNDER_END_WALL = 0.54
 
 const FLOOR_PLANK_ROW_LENGTH = 2.505
 
@@ -61,6 +61,10 @@ const SECOND_CORNER_JOINTS = [0]
 export type WallSide = "left" | "right"
 
 export type WallSpot = { position: Vector3Tuple; rotationY: number; length: number }
+
+export type DoorSpot = { position: Vector3Tuple; rotationY: number }
+
+export type HouseDoors = { start: DoorSpot; end: DoorSpot }
 
 type RunOptions = {
   halfWidth: number
@@ -88,12 +92,21 @@ export function houseLayout(first: CorridorToken[], second: CorridorToken[]): Pl
   )
 
   return [
-    { piece: "door", position: [start, 0, 0], rotationY: ACROSS_FORWARD },
     ...firstCorridor,
     ...cornerPlacements(corner),
     ...floorRows(start, firstLength + CORNER_LENGTH),
     ...secondCorridor,
   ]
+}
+
+export function houseDoors(first: CorridorToken[], second: CorridorToken[]): HouseDoors {
+  return {
+    start: { position: [-lengthOf(first) / 2, 0, 0], rotationY: ACROSS_FORWARD },
+    end: turned(
+      { position: [lengthOf(second), 0, 0], rotationY: ACROSS_BACK },
+      secondCorridorOrigin(first),
+    ),
+  }
 }
 
 export function firstCorridorWall(
@@ -161,6 +174,10 @@ export function firstCorridorColumns(first: CorridorToken[]): Placement[] {
       onRight(joint === length ? "column_corner" : "column", joint, FIRST_HALF_WIDTH),
     ])
     .map((placement) => shifted(placement, -length / 2))
+}
+
+export function cornerStart(first: CorridorToken[]) {
+  return lengthOf(first) / 2
 }
 
 export function endWall(first: CorridorToken[]): WallSpot {
@@ -289,13 +306,7 @@ function secondCorridorPlacements(tokens: CorridorToken[]): Placement[] {
     position: [SECOND_ROOF_OFFSET + index * SEGMENT_LENGTH, 0, 0],
     rotationY: FACING_FORWARD,
   }))
-  return [
-    ...run,
-    ...divisions,
-    ...roofs,
-    ...floorTiles(columnJoints, length),
-    { piece: "door", position: [length, 0, 0], rotationY: ACROSS_BACK },
-  ]
+  return [...run, ...divisions, ...roofs, ...floorTiles(columnJoints, length)]
 }
 
 function floorTiles(columnJoints: number[], length: number): Placement[] {
@@ -304,7 +315,7 @@ function floorTiles(columnJoints: number[], length: number): Placement[] {
   const bounds = [
     DIVISION_HALF_LENGTH,
     ...stops.flatMap((joint) => [joint - DIVISION_HALF_LENGTH, joint + DIVISION_HALF_LENGTH]),
-    length + (columnAtEnd ? -DIVISION_HALF_LENGTH : DIVISION_HALF_LENGTH),
+    columnAtEnd ? length - DIVISION_HALF_LENGTH : length,
   ]
   const placements: Placement[] = []
   let firstRow = 0
@@ -347,11 +358,11 @@ function randomOf(row: number, column: number, seed: number) {
 }
 
 function floorRows(start: number, length: number): Placement[] {
-  const coveredLength = length + 2 * FLOOR_OVERHANG_UNDER_DOOR
+  const coveredLength = length + FLOOR_OVERHANG_UNDER_END_WALL
   const count = Math.ceil(coveredLength / FLOOR_PLANK_ROW_LENGTH)
   return Array.from({ length: count }, (_, index) => ({
     piece: "floor",
-    position: [start - FLOOR_OVERHANG_UNDER_DOOR + index * FLOOR_PLANK_ROW_LENGTH, 0, 0],
+    position: [start + index * FLOOR_PLANK_ROW_LENGTH, 0, 0],
     rotationY: FACING_FORWARD,
   }))
 }
@@ -379,12 +390,12 @@ function shifted(placement: Placement, by: number): Placement {
   return { ...placement, position: [x + by, y, z] }
 }
 
-function turned(placement: Placement, [originX, originZ]: [number, number]): Placement {
-  const [x, y, z] = placement.position
+function turned<Spot extends DoorSpot>(spot: Spot, [originX, originZ]: [number, number]): Spot {
+  const [x, y, z] = spot.position
   return {
-    ...placement,
+    ...spot,
     position: [originX - z, y, originZ + x],
-    rotationY: placement.rotationY + TURN_RIGHT,
+    rotationY: spot.rotationY + TURN_RIGHT,
   }
 }
 

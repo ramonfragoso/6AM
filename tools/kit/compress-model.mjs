@@ -31,6 +31,8 @@ const UASTC_ENCODING = [
   "18",
 ]
 
+const BLUE_CHANNEL = 2
+
 const ETC1S_ENCODING = ["--encode", "basis-lz", "--qlevel", "255", "--clevel", "4"]
 
 const PAINTING_ENCODING = ["--format", "R8G8B8_SRGB", "--assign-tf", "srgb", ...UASTC_ENCODING]
@@ -38,6 +40,8 @@ const PAINTING_ENCODING = ["--format", "R8G8B8_SRGB", "--assign-tf", "srgb", ...
 const PAINTING_DIRECTORY = "paintings"
 
 const ANCHOR_MARKER = "__anchor_"
+
+const GLOW_MARKER = "__glow"
 
 const KEEP_ANCHOR_NODES = true
 
@@ -66,6 +70,7 @@ const io = new NodeIO()
 
 const document = await io.read(inputPath)
 markAnchors(document)
+markGlows(document)
 await document.transform(
   dedup(),
   joinPrimitives({ cleanup: false }),
@@ -79,9 +84,10 @@ mkdirSync(CACHE_DIRECTORY, { recursive: true })
 try {
   const textures = document.getRoot().listTextures()
   const total = textures.length + paintings.length
+  const threeChannelData = await threeChannelDataOf(textures)
   textures.forEach((texture, index) => {
     console.log(`${PROGRESS_TAG} ${index}/${total} ${texture.getName()}`)
-    compressTexture(texture, index)
+    compressTexture(texture, index, threeChannelData.has(texture))
   })
   mkdirSync(paintingDirectory, { recursive: true })
   for (const [index, painting] of paintings.entries()) {
@@ -113,10 +119,16 @@ function markAnchors(document) {
   }
 }
 
-function compressTexture(texture, index) {
+function markGlows(document) {
+  for (const material of document.getRoot().listMaterials()) {
+    if (material.getName().endsWith(GLOW_MARKER)) material.setExtras({ glow: true })
+  }
+}
+
+function compressTexture(texture, index, threeChannels) {
   const extension = EXTENSION_BY_MIME[texture.getMimeType()]
   if (!extension) return
-  const encoding = [...encodingFor(texture), "--generate-mipmap"]
+  const encoding = [...encodingFor(texture, threeChannels), "--generate-mipmap"]
   const cached = join(CACHE_DIRECTORY, `${cacheKey(texture.getImage(), encoding)}.ktx2`)
   if (!existsSync(cached)) {
     const source = join(workDirectory, `${index}.${extension}`)
@@ -158,9 +170,19 @@ function cacheKey(image, encoding) {
   return createHash("sha256").update(image).update(JSON.stringify(encoding)).digest("hex")
 }
 
-function encodingFor(texture) {
+async function threeChannelDataOf(textures) {
+  const found = new Set()
+  for (const texture of textures) {
+    if (!EXTENSION_BY_MIME[texture.getMimeType()] || !isOcclusionOnly(texture)) continue
+    const { channels } = await sharp(texture.getImage()).stats()
+    if ((channels[BLUE_CHANNEL]?.max ?? 0) > 0) found.add(texture)
+  }
+  return found
+}
+
+function encodingFor(texture, threeChannels) {
   const role = roleOf(texture)
-  if (role === "normal") {
+  if (role === "normal" || threeChannels) {
     return ["--format", "R8G8B8_UNORM", "--assign-tf", "linear", ...UASTC_ENCODING]
   }
   if (role === "color") {
@@ -168,6 +190,15 @@ function encodingFor(texture) {
     return ["--format", format, ...ETC1S_ENCODING]
   }
   return ["--format", "R8G8B8_UNORM", "--assign-tf", "linear", ...ETC1S_ENCODING]
+}
+
+function isOcclusionOnly(texture) {
+  const materials = document.getRoot().listMaterials()
+  return (
+    materials.some((material) => material.getOcclusionTexture() === texture) &&
+    roleOf(texture) === "data" &&
+    !materials.some((material) => material.getMetallicRoughnessTexture() === texture)
+  )
 }
 
 function roleOf(texture) {

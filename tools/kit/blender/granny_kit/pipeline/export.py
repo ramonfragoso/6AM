@@ -15,17 +15,27 @@ def stage(start, end):
     return report
 
 
-def run(output_path, texture_dir, cache_dir, force=False, collection=KIT_COLLECTION):
+def run(output_path, texture_dir, cache_dir, force=False, collection=KIT_COLLECTION, context_collection=None):
     started = time.time()
     scene = bpy.context.scene
     scene.render.engine = "CYCLES"
     if bpy.context.object and bpy.context.object.mode != "OBJECT":
         bpy.ops.object.mode_set(mode="OBJECT")
+    for name in filter(None, (collection, context_collection)):
+        link_to_scene(scene, name)
 
     progress.report(0.02, "Copying pieces")
     export_collection = bpy.data.collections.new(EXPORT_COLLECTION)
     scene.collection.children.link(export_collection)
-    pieces = parts.build_pieces(collection, export_collection, materials.mapping_of)
+    built = parts.build_pieces(collection, export_collection, materials.mapping_of)
+    pieces = {name: piece for name, piece in built.items() if not piece.context_only}
+    context = {name: piece for name, piece in built.items() if piece.context_only}
+    if context_collection:
+        context.update(
+            parts.build_pieces(
+                context_collection, export_collection, materials.mapping_of, only=occlusion.CONTEXT_PIECES,
+            )
+        )
     if not pieces:
         raise RuntimeError(f'No "prefab_*" empties found in the "{collection}" collection')
 
@@ -42,7 +52,7 @@ def run(output_path, texture_dir, cache_dir, force=False, collection=KIT_COLLECT
         piece.pack_uv = any(analyses[m].pack_uv for part in piece.parts for m in part.sources if m)
     parts.add_variants(pieces, export_collection)
 
-    occlusion_paths = occlusion.bake_all(pieces, cache_dir, force, stage(0.1, 0.6))
+    occlusion_paths = occlusion.bake_all(pieces, context, analyses, cache_dir, force, stage(0.1, 0.6))
 
     swatch_sources = sorted(
         {m for piece in pieces.values() for part in piece.parts if not part.unique for m in part.sources if m},
@@ -86,6 +96,16 @@ def run(output_path, texture_dir, cache_dir, force=False, collection=KIT_COLLECT
     cache.write_json(os.path.splitext(output_path)[0] + ".summary.json", summary)
     progress.report(1.0, f"Exported {len(exported)} pieces in {summary['seconds']}s")
     return summary
+
+
+def link_to_scene(scene, name):
+    collection = bpy.data.collections[name]
+    if collection not in scene.collection.children_recursive:
+        scene.collection.children.link(collection)
+    for obj in list(collection.all_objects):
+        obj.hide_viewport = False
+        if obj.name in bpy.context.view_layer.objects:
+            obj.hide_set(False)
 
 
 def export(pieces, output_path):

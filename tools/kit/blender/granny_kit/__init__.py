@@ -31,6 +31,7 @@ SURFACE_MODES = [
     ("SOLID", "Solid over darkness", "Opaque in the game: opacity and transmission darken the color instead, like glass over a void", 1),
     ("PAINTING", "Painting", "Its image is exported as its own texture in public/models/paintings, so the game can swap paintings; Texture size sets the long side", 2),
     ("CLEAR_GLASS", "Clear glass", "See-through in the game: one tint from its base color, with an opacity that grows as the tint darkens; textures and transmission are left out", 3),
+    ("GLOW", "Glow", "Exported as its own material, never merged with the rest of its Piece, so the game can make it glow (the Ceiling Lamp's disc)", 4),
 ]
 
 BAKE_DEVICES = [

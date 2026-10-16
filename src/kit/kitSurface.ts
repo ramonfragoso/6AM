@@ -53,7 +53,20 @@ type SurfaceInputs = {
   roughness: Node<"float">
 }
 
-export function kitSurfaceMaterial(source: KitSourceMaterial): Material {
+export type SurfaceOptions = {
+  worldVariation?: boolean
+  occlusionStrength?: Node<"float">
+  grimeStrength?: Node<"float">
+}
+
+export function kitSurfaceMaterial(
+  source: KitSourceMaterial,
+  {
+    worldVariation = true,
+    occlusionStrength = kitSurface.occlusion,
+    grimeStrength = kitSurface.grime,
+  }: SurfaceOptions = {},
+): Material {
   const surface = source.isMeshPhysicalMaterial
     ? new MeshPhysicalNodeMaterial()
     : new MeshStandardNodeMaterial()
@@ -75,11 +88,11 @@ export function kitSurfaceMaterial(source: KitSourceMaterial): Material {
   }
 
   const baked = texture(occlusionMap)
-  const occlusion = mix(float(1), baked.r, kitSurface.occlusion)
-  const grime = baked.g.mul(kitSurface.grime)
-  const variation = mx_noise_float(positionWorld.mul(kitSurface.variationScale))
-    .mul(kitSurface.variation)
-    .add(1)
+  const occlusion = mix(float(1), baked.r, occlusionStrength)
+  const grime = baked.g.mul(grimeStrength)
+  const variation = worldVariation
+    ? mx_noise_float(positionWorld.mul(kitSurface.variationScale)).mul(kitSurface.variation).add(1)
+    : float(1)
   const clean = inputs.color.mul(variation).mul(occlusion)
   const alpha = source.map ? texture(source.map).a : float(1)
 

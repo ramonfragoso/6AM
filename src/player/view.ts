@@ -8,8 +8,12 @@ const PITCH_LIMIT = LOOKING_STRAIGHT_UP - PITCH_MARGIN
 
 const YAW_FIRST = "YXZ"
 
-export function createView() {
-  return new Euler(0, 0, 0, YAW_FIRST)
+export function createView(yaw = 0) {
+  return new Euler(0, yaw, 0, YAW_FIRST)
+}
+
+export function lookAlong(view: Euler, pitch: number, yaw: number) {
+  view.set(pitch, yaw, 0, YAW_FIRST)
 }
 
 export function turnView(view: Euler, look: Vector2) {

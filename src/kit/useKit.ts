@@ -9,12 +9,14 @@ import {
   type Object3D,
 } from "three"
 import { disposeMaterial, releaseModel, useModel } from "@/models/useModel"
+import type { TexturesFor } from "@/models/useSurfacedModel"
 import { KIT_NODE_PREFIX, KIT_PIECES, type KitPiece } from "./kitPieces"
-import { kitSurfaceMaterial } from "./kitSurface"
+import { kitSurfaceMaterial, type SurfaceOptions } from "./kitSurface"
 
 export type PiecePart = {
   geometry: BufferGeometry
   material: Material
+  source: Material
   matrix: Matrix4
   canvas: boolean
 }
@@ -29,6 +31,8 @@ export type PieceModel = {
 
 export type Kit = Record<KitPiece, PieceModel>
 
+export type PieceSurfacing = SurfaceOptions & { texturesFor?: TexturesFor }
+
 type LoadedKit = { url: string; scene: Object3D; kit: Kit }
 
 const CANVAS_MATERIAL_PREFIX = "kit_painting_canvas"
@@ -39,7 +43,7 @@ const ANCHOR_PREFIX = "anchor_"
 
 export function useKit(url: string): Kit {
   const { scene } = useModel(url)
-  const kit = useMemo(() => pieceModelsOf(scene), [scene])
+  const kit = useMemo(() => pieceModelsOf(scene, KIT_PIECES), [scene])
   useReleaseReplacedKit({ url, scene, kit })
   return kit
 }
@@ -60,22 +64,29 @@ function surfaceMaterialsOf(kit: Kit) {
   return new Set(Object.values(kit).flatMap((piece) => piece.parts.map((part) => part.material)))
 }
 
-function pieceModelsOf(scene: Object3D): Kit {
+export function pieceModelsOf<Piece extends string>(
+  scene: Object3D,
+  pieces: readonly Piece[],
+  surfacing: PieceSurfacing = {},
+): Record<Piece, PieceModel> {
   scene.updateMatrixWorld(true)
   const surfaces = new Map<Material, Material>()
-  const entries = KIT_PIECES.map((piece) => [piece, pieceModelOf(scene, piece, surfaces)] as const)
-  return Object.fromEntries(entries) as Kit
+  const entries = pieces.map(
+    (piece) => [piece, pieceModelOf(scene, piece, surfaces, surfacing)] as const,
+  )
+  return Object.fromEntries(entries) as Record<Piece, PieceModel>
 }
 
 function pieceModelOf(
   scene: Object3D,
-  piece: KitPiece,
+  piece: string,
   surfaces: Map<Material, Material>,
+  surfacing: PieceSurfacing,
 ): PieceModel {
   const root = scene.getObjectByName(KIT_NODE_PREFIX + piece)
   if (!root) {
     // eslint-disable-next-line no-console
-    console.warn(`Kit has no "${KIT_NODE_PREFIX + piece}" node; export the Kit again from Blender`)
+    console.warn(`Model has no "${KIT_NODE_PREFIX + piece}" node; export it again from Blender`)
     return { parts: [], bounds: new Box3(), anchors: [] }
   }
 
@@ -93,7 +104,8 @@ function pieceModelOf(
     const matrix = toRoot.clone().multiply(object.matrixWorld)
     parts.push({
       geometry: object.geometry,
-      material: surfaceOf(object.material, surfaces),
+      material: surfaceOf(object.material, surfaces, surfacing),
+      source: object.material,
       matrix,
       canvas: (object.material as Material).name.startsWith(CANVAS_MATERIAL_PREFIX),
     })
@@ -103,10 +115,16 @@ function pieceModelOf(
   return { parts, bounds, anchors }
 }
 
-function surfaceOf(material: Material, surfaces: Map<Material, Material>) {
+function surfaceOf(
+  material: Material,
+  surfaces: Map<Material, Material>,
+  { texturesFor, ...options }: PieceSurfacing,
+) {
   let surface = surfaces.get(material)
   if (!surface) {
-    surface = kitSurfaceMaterial(material as MeshStandardMaterial)
+    const textures = texturesFor?.(material)
+    const source = textures ? Object.assign(material.clone(), textures) : material
+    surface = kitSurfaceMaterial(source as MeshStandardMaterial, options)
     surfaces.set(material, surface)
   }
   return surface

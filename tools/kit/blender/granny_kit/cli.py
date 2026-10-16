@@ -38,6 +38,7 @@ def main():
         settings["cache_dir"],
         settings.get("force", False),
         settings.get("collection", export.KIT_COLLECTION),
+        settings.get("context_collection"),
     )
 
 

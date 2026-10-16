@@ -1,5 +1,5 @@
 import type { Vector3Tuple } from "three"
-import type { Placement } from "@/kit/kitPieces"
+import type { DoorSpot } from "@/kit/corridorLayout"
 
 export const CRUCIFIX_URL = "/models/crucifix.glb"
 
@@ -17,14 +17,8 @@ export type CrucifixPlacement = {
   scale: number
 }
 
-export function endDoorOf(placements: Placement[]): Placement {
-  const door = placements.filter(({ piece }) => piece === "door").at(-1)
-  if (!door) throw new Error("The House has no door to hang the Crucifix on")
-  return door
-}
-
 export function crucifixPlacement(
-  { position: [x, , z], rotationY }: Placement,
+  { position: [x, , z], rotationY }: DoorSpot,
   { height, size }: CrucifixSpot,
 ): CrucifixPlacement {
   return {

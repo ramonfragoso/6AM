@@ -20,6 +20,18 @@ const DOOR_TURN = Math.PI
 
 const LEAF_HINGE: Vector3Tuple = [0.7303, 0, 0.1089]
 
+const LEAF_THICKNESS = 0.2201
+
+const FRONT_HINGE_OFFSET = new Matrix4().makeTranslation(0, 0, -LEAF_THICKNESS)
+
+const BACK_FROM_FRONT_HINGE = new Matrix4().makeTranslation(0, 0, LEAF_THICKNESS)
+
+const BACK_HINGE = new Matrix4().makeTranslation(...LEAF_HINGE)
+
+const FRONT_HINGE = BACK_HINGE.clone().multiply(FRONT_HINGE_OFFSET)
+
+const leafTurn = new Matrix4()
+
 const DEGREES = Math.PI / 180
 
 const PLASTER_MATERIAL_PREFIX = "kit_painted_plaster_wall__"
@@ -42,11 +54,10 @@ export function doorFrameInWall({ position: [x, y, z], rotationY }: Placement): 
   }
 }
 
-export function doorLeafMatrix(frame: Matrix4, openDegrees: number) {
-  return frame
-    .clone()
-    .multiply(new Matrix4().makeTranslation(...LEAF_HINGE))
-    .multiply(new Matrix4().makeRotationY(openDegrees * DEGREES))
+export function doorLeafMatrix(frame: Matrix4, openDegrees: number, target = new Matrix4()) {
+  leafTurn.makeRotationY(openDegrees * DEGREES)
+  if (openDegrees >= 0) return target.copy(frame).multiply(BACK_HINGE).multiply(leafTurn)
+  return target.copy(frame).multiply(FRONT_HINGE).multiply(leafTurn).multiply(BACK_FROM_FRONT_HINGE)
 }
 
 export function framePartsOf(kit: Kit) {

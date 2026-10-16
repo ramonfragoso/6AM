@@ -16,6 +16,8 @@ PACK_UV_PROPERTY = "granny_pack_uv"
 SOLID_SURFACE = 1
 PAINTING_SURFACE = 2
 CLEAR_GLASS_SURFACE = 3
+GLOW_SURFACE = 4
+GLOW_SUFFIX = "__glow"
 CLEAR_GLASS_OPACITY = 0.15
 CLEAR_GLASS_ABSORPTION = 0.6
 CLEAR_GLASS_ROUGHNESS = 0.05
@@ -95,6 +97,7 @@ class Analysis:
     pack_uv: bool = False
     painting: bool = False
     clear_glass: bool = False
+    glow: bool = False
     dropped: list = field(default_factory=list)
     notes: list = field(default_factory=list)
 
@@ -287,6 +290,7 @@ def analyze(material):
         analysis.reasons.append("no surface shader")
         return analysis
     analysis.solid = stored_property(material, SURFACE_PROPERTY) == SOLID_SURFACE
+    analysis.glow = stored_property(material, SURFACE_PROPERTY) == GLOW_SURFACE
     surface = camera_shader(out.inputs["Surface"])
     if surface is None:
         analysis.reasons.append("no surface shader")
@@ -850,7 +854,8 @@ def assign_gltf_materials(pieces, analyses, swatches, uniques, occlusion_paths):
                     continue
                 mode = "unique" if part.unique else "swatch"
                 texture_key = repr(uniques[piece.name]) if part.unique else repr(swatches[source])
-                key = (piece.name, mode, texture_key, source.use_backface_culling, tuple(analyses[source].tint_layers))
+                glow = source.name if analyses[source].glow else None
+                key = (piece.name, mode, texture_key, source.use_backface_culling, tuple(analyses[source].tint_layers), glow)
                 if key not in created:
                     if part.unique:
                         textures = TextureSet(
@@ -874,7 +879,7 @@ def assign_gltf_materials(pieces, analyses, swatches, uniques, occlusion_paths):
 def gltf_name(source, piece, part, analysis):
     if analysis.painting:
         return f"kit_painting_canvas__{piece.name}"
-    return f"kit_{slug(source)}__{piece.name}" + ("__unique" if part.unique else "")
+    return f"kit_{slug(source)}__{piece.name}" + ("__unique" if part.unique else "") + (GLOW_SUFFIX if analysis.glow else "")
 
 
 def is_painting(material):

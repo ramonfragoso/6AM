@@ -6,13 +6,20 @@ import { Suspense, useRef, type RefObject } from "react"
 import type { Vector3Tuple } from "three"
 import { DEFAULT_FOV } from "@/camera/useCameraTuning"
 import { FieldOfView } from "@/camera/FieldOfView"
+import { Dawn } from "@/dawn/Dawn"
+import { DawnScreen } from "@/dawn/DawnScreen"
 import { useDebugMode } from "@/debug/useDebugMode"
 import { DebugPlayer } from "@/debugPlayer/DebugPlayer"
 import { DebugPlayerCoordinates } from "@/debugPlayer/DebugPlayerCoordinates"
 import { Dust } from "@/dust/Dust"
+import { HauntOverlay } from "@/haunts/HauntOverlay"
+import { Haunts } from "@/haunts/Haunts"
 import { Corridor } from "@/kit/Corridor"
+import { Night } from "@/night/Night"
+import { Prompt } from "@/passage/Prompt"
 import { Player } from "@/player/Player"
 import { PostProcessing } from "@/postprocessing/PostProcessing"
+import { SoundSystem } from "@/sound/SoundSystem"
 import { useTuningPersistence } from "@/tuning/useTuningPersistence"
 import { Lights } from "./Lights"
 import { GRAVITY, PHYSICS_STEP_PRIORITY, PHYSICS_TIME_STEP } from "./physicsSettings"
@@ -42,10 +49,14 @@ const GAME_VIEW_LABEL = "Game view"
 const NO_GRAPHICS_MESSAGE =
   "Your browser can't run 3D graphics. Try a recent version of Chrome, Edge, Firefox or Safari."
 
-type SceneProps = { debugPlayerCoordinates: RefObject<HTMLOutputElement | null> }
+type SceneProps = {
+  debugPlayerCoordinates: RefObject<HTMLOutputElement | null>
+  prompt: RefObject<HTMLParagraphElement | null>
+}
 
 export function World() {
   const debugPlayerCoordinates = useRef<HTMLOutputElement>(null)
+  const prompt = useRef<HTMLParagraphElement>(null)
 
   return (
     <main className="h-screen w-full">
@@ -53,6 +64,9 @@ export function World() {
         <Leva fill hidden={TUNING_PANEL_HIDDEN} theme={TUNING_PANEL_THEME} />
       </div>
       <DebugPlayerCoordinates ref={debugPlayerCoordinates} />
+      <Prompt ref={prompt} />
+      <HauntOverlay />
+      <DawnScreen />
       <WebGPUCanvas
         dpr={PIXEL_RATIO}
         camera={INITIAL_CAMERA}
@@ -63,14 +77,14 @@ export function World() {
       >
         <color attach="background" args={[BACKGROUND_COLOR]} />
         <Suspense fallback={null}>
-          <Scene debugPlayerCoordinates={debugPlayerCoordinates} />
+          <Scene debugPlayerCoordinates={debugPlayerCoordinates} prompt={prompt} />
         </Suspense>
       </WebGPUCanvas>
     </main>
   )
 }
 
-function Scene({ debugPlayerCoordinates }: SceneProps) {
+function Scene({ debugPlayerCoordinates, prompt }: SceneProps) {
   useTuningPersistence()
   const debugMode = useDebugMode()
 
@@ -85,11 +99,15 @@ function Scene({ debugPlayerCoordinates }: SceneProps) {
         updatePriority={PHYSICS_STEP_PRIORITY}
       >
         <Corridor />
-        <Player />
+        <Player prompt={prompt} />
       </Physics>
       <Dust />
       <DebugPlayer coordinatesReadout={debugPlayerCoordinates} />
       <FieldOfView />
+      <SoundSystem />
+      <Night />
+      <Haunts />
+      <Dawn />
       <PostProcessing />
     </>
   )

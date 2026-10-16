@@ -17,6 +17,7 @@ import {
 } from "three/tsl"
 import { gaussianBlur } from "three/addons/tsl/display/GaussianBlurNode.js"
 import { Color, RedFormat, UnsignedByteType, type PerspectiveCamera } from "three/webgpu"
+import { insideSpans, lengthInSpans, safeRoomSpans } from "@/safeRoom/safeRoomVolumes"
 
 const FLOOR_LEVEL = 0
 
@@ -86,19 +87,26 @@ export function createFog(camera: PerspectiveCamera, sceneDepth: any) {
     const end = toBottom.max(toTop).min(surfaceDistance).min(start.add(uniforms.maxRayDistance))
     const marched = end.sub(start).max(0)
 
-    const stepLength = marched.div(float(uniforms.steps))
+    const stepLength = marched.div(float(uniforms.steps)).toVar()
     const step = direction.mul(stepLength)
     const dither = interleavedGradientNoise(screenCoordinate.xy)
     const position = cameraPosition.add(direction.mul(start)).add(step.mul(dither)).toVar()
+    const rooms = safeRoomSpans(cameraPosition, direction)
+    const travelled = start.add(stepLength.mul(dither)).toVar()
 
     const accumulated = float(0).toVar()
     Loop(uniforms.steps, () => {
-      accumulated.addAssign(cloudDensity(position).mul(stepLength).mul(uniforms.density))
+      const outsideRooms = float(1).sub(insideSpans(rooms, travelled))
+      accumulated.addAssign(
+        cloudDensity(position).mul(stepLength).mul(uniforms.density).mul(outsideRooms),
+      )
       position.addAssign(step)
+      travelled.addAssign(stepLength)
     })
 
     const volumeFog = float(1).sub(accumulated.negate().exp())
-    const rangeFog = surfaceDistance
+    const distanceOutside = surfaceDistance.sub(lengthInSpans(rooms, surfaceDistance))
+    const rangeFog = distanceOutside
       .sub(uniforms.rangeNear)
       .div(uniforms.rangeFar.sub(uniforms.rangeNear).max(MIN_RANGE))
       .clamp(0, 1)

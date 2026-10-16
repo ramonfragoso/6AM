@@ -6,7 +6,7 @@ import numpy as np
 from mathutils import Matrix
 
 from . import cache, images, parts, progress
-from .materials import bake
+from .materials import BAKE_MARGIN, bake, unique_size
 from .parts import UV_OCCLUSION, UV_ORIGINAL, columns_of, surface_area, uv_array
 
 OCCLUSION_DISTANCE = 0.6
@@ -16,6 +16,8 @@ RENDER_SAMPLES = 32
 TEXELS_PER_METER = 200
 PACKING_SLACK = 1.4
 MIN_SIZE = 512
+MIN_SEPARATE_SIZE = 128
+PACKED_CHANNELS = {"roughness", "metallic"}
 MAX_SIZE = 1024
 BLUR_PASSES = 2
 GRIME_VERSION = "grime-2"
@@ -37,11 +39,28 @@ TILES_ACROSS = 4
 TILE_WIDTH = 0.425
 TILE_LENGTH = 0.4
 PAINTING_PREFIX = "painting_"
-FLOOR_PROPS = {"square_table_set", "round_table_set", "chair"}
+FLOOR_PROPS = {"square_table_set", "round_table_set", "chair", "round_table"}
+CLOCK = "clock"
+CLOCK_TABLE = "round_table"
 COLUMN_LANTERN = "lantern"
 CANDLE_SET_PREFIX = "candle_set_"
 PAINTING_HEIGHT = 1.85
 WALL_SURFACE = 0.05
+SAFE_ROOM_PIECES = {"safe_room_half", "safe_room_doorway_wall", "safe_room_full_wall", "ceiling_lamp"}
+SAFE_ROOM_EXTERIOR = "safe_room_exterior"
+SAFE_ROOM_DOOR = "safe_room_door"
+DOORLESS_SAFE_ROOM_PIECES = {"safe_room_half"}
+SAFE_ROOM_DOOR_LINE = 2.05
+END_DOOR_VARIANT = "__end"
+TILED_CORRIDOR_LENGTH = 6.0
+CONTEXT_PIECES = {"wall_2m", "roof", "drain", "floor", "floor_tile_1", "floor_tile_2"}
+LAMP_PIECE = "ceiling_lamp"
+LAMP_ANCHOR = "anchor_light_ceiling_lamp"
+LAMP_RADIUS = 0.018
+LAMP_POWER = 1000.0
+LAMP_SAMPLES = 128
+UNLIT = 1e-5
+LAMP_VERSION = "lamp-1"
 
 SETTINGS = (OCCLUSION_DISTANCE, CAVITY_DISTANCE, AO_NODE_SAMPLES, RENDER_SAMPLES, BLUR_PASSES, GRIME_VERSION)
 
@@ -57,6 +76,15 @@ def piece_length(piece):
         for vertex in part.obj.data.vertices
     ]
     return max(xs, default=0.0)
+
+
+def piece_height(piece):
+    zs = [
+        (part.obj.matrix_basis @ vertex.co).z
+        for part in piece.parts
+        for vertex in part.obj.data.vertices
+    ]
+    return max(zs, default=0.0)
 
 
 def corridor_shell(start, end, pieces):
@@ -142,6 +170,57 @@ def tile_recipe(name, pieces):
     return scene[index][1], scene[:index] + scene[index + 1:]
 
 
+def safe_room_scene(pieces):
+    half_turn = at(0, 0, math.pi)
+    entries = [
+        ("safe_room_half", at(0)), ("safe_room_half", half_turn),
+        ("safe_room_doorway_wall", at(0)), ("safe_room_doorway_wall", half_turn),
+        (SAFE_ROOM_DOOR, at(0)), (SAFE_ROOM_DOOR, half_turn),
+        ("ceiling_lamp", at(0)),
+    ]
+    return [entry for entry in entries if entry[0] in pieces]
+
+
+def safe_room_recipe(name, pieces):
+    scene = safe_room_scene(pieces)
+    if name in DOORLESS_SAFE_ROOM_PIECES:
+        scene = [entry for entry in scene if entry[0] != SAFE_ROOM_DOOR]
+    if name == "safe_room_full_wall":
+        far_side = at(0, 0, math.pi)
+        far_door = ("safe_room_doorway_wall", SAFE_ROOM_DOOR)
+        return at(0), [e for e in scene if not (e[0] in far_door and same_matrix(e[1], far_side))]
+    index = next(i for i, entry in enumerate(scene) if entry[0] == name)
+    return scene[index][1], scene[:index] + scene[index + 1:]
+
+
+def first_corridor_shell(pieces):
+    shell = corridor_shell(0, 3 * SEGMENT_LENGTH, pieces)
+    return [e for e in shell if not (e[0] == "floor" and e[1].translation.x < 0)]
+
+
+def tiled_corridor_shell(pieces):
+    half = SIDE_HALF_WIDTH
+    segments = int(TILED_CORRIDOR_LENGTH / SEGMENT_LENGTH)
+    entries = []
+    for k in range(segments):
+        x = k * SEGMENT_LENGTH
+        entries += [(SHELL_WALL, at(x, half)), (SHELL_WALL, at(x + SEGMENT_LENGTH, -half, math.pi))]
+        entries.append(("roof", at(x - SIDE_ROOF_OFFSET)))
+    rows = round(TILED_CORRIDOR_LENGTH / TILE_LENGTH)
+    entries += [
+        (checker_tile(row, column), at((row + 0.5) * TILE_LENGTH, tile_offset(column), math.pi / 2))
+        for row in range(rows) for column in range(TILES_ACROSS)
+    ]
+    return [entry for entry in entries if entry[0] in pieces]
+
+
+def safe_room_exterior_recipe(name, pieces):
+    room_side = [(n, at(0)) for n in ("safe_room_doorway_wall", SAFE_ROOM_DOOR) if n in pieces]
+    to_corridor = Matrix.Translation((0, -SAFE_ROOM_DOOR_LINE, 0)) @ Matrix.Rotation(-math.pi / 2, 4, "Z")
+    shell = tiled_corridor_shell(pieces) if name.endswith(END_DOOR_VARIANT) else first_corridor_shell(pieces)
+    return at(0), room_side + [(piece, to_corridor @ matrix) for piece, matrix in shell]
+
+
 def corner_recipe(name, pieces):
     scene = [entry for entry in corner_scene() if entry[0] in pieces]
     index = next(i for i, entry in enumerate(scene) if entry[0] == name)
@@ -153,8 +232,15 @@ def floor_under_prop(pieces):
 
 
 def recipe(name, pieces):
+    if name.startswith(SAFE_ROOM_EXTERIOR):
+        return safe_room_exterior_recipe(name, pieces)
+    if name in SAFE_ROOM_PIECES:
+        return safe_room_recipe(name, pieces)
     if name in FLOOR_PROPS:
         return at(0), floor_under_prop(pieces)
+    if name.startswith(CLOCK) and CLOCK_TABLE in pieces:
+        on_table = Matrix.Translation((0, 0, piece_height(pieces[CLOCK_TABLE])))
+        return on_table, [(CLOCK_TABLE, at(0))] if name == CLOCK else []
     if name.startswith(CANDLE_SET_PREFIX):
         columns = [("column", at(x, side * CORRIDOR_HALF_WIDTH, angle)) for x in (0.0, SEGMENT_LENGTH) for side, angle in ((1, 0.0), (-1, math.pi))]
         return at(0), corridor_shell(-SEGMENT_LENGTH, 2 * SEGMENT_LENGTH, pieces) + [c for c in columns if c[0] in pieces]
@@ -194,11 +280,98 @@ def recipe(name, pieces):
     return at(0), []
 
 
+def roughness_texture_sizes(piece, analyses):
+    unique_parts = [part for part in piece.parts if part.unique]
+    unique_materials = [m for part in unique_parts for m in part.sources if m and not analyses[m].tileable]
+    sizes = set()
+    for part in piece.parts:
+        for m in part.sources:
+            if m is None or m not in analyses or not PACKED_CHANNELS & analyses[m].needs:
+                continue
+            sizes.add(unique_size(unique_parts, unique_materials) if part.unique else analyses[m].size)
+    return sizes
+
+
+def apart_from(size, taken):
+    while size in taken and size > MIN_SEPARATE_SIZE:
+        size //= 2
+    return size
+
+
+def lamp_position(name, pieces):
+    if name not in SAFE_ROOM_PIECES or LAMP_PIECE not in pieces:
+        return None
+    anchor = next((a for a in pieces[LAMP_PIECE].anchors if a.name.endswith(LAMP_ANCHOR)), None)
+    return None if anchor is None else anchor.matrix_basis.translation.copy()
+
+
+def lamp_material():
+    material = bpy.data.materials.new("_granny_lamp")
+    material.use_nodes = True
+    nodes, links = material.node_tree.nodes, material.node_tree.links
+    nodes.clear()
+    out = nodes.new("ShaderNodeOutputMaterial")
+    diffuse = nodes.new("ShaderNodeBsdfDiffuse")
+    diffuse.inputs["Color"].default_value = (1, 1, 1, 1)
+    links.new(diffuse.outputs[0], out.inputs["Surface"])
+    image_node = nodes.new("ShaderNodeTexImage")
+    nodes.active = image_node
+    return material, image_node
+
+
+def direct_light(targets, image):
+    bpy.context.scene.cycles.samples = LAMP_SAMPLES
+    for obj in bpy.context.selected_objects:
+        obj.select_set(False)
+    for obj in targets:
+        obj.select_set(True)
+    bpy.context.view_layer.objects.active = targets[0]
+    bpy.ops.object.bake(
+        type="DIFFUSE", pass_filter={"DIRECT"}, margin=BAKE_MARGIN, margin_type="ADJACENT_FACES",
+        use_clear=True, target="IMAGE_TEXTURES", save_mode="INTERNAL",
+    )
+    return images.pixels(image)[..., :3].mean(-1)
+
+
+def lamp_visibility(targets, others, position, size, collection):
+    scene = bpy.context.scene
+    world = scene.world
+    material, image_node = lamp_material()
+    image = images.new_bake_image("_granny_lamp", size)
+    image_node.image = image
+    light = bpy.data.lights.new("_granny_lamp", "POINT")
+    light.energy = LAMP_POWER
+    light.shadow_soft_size = LAMP_RADIUS
+    lamp = bpy.data.objects.new("_granny_lamp", light)
+    collection.objects.link(lamp)
+    lamp.location = position
+    placed = targets + others
+    try:
+        scene.world = None
+        for obj in placed:
+            for slot in obj.material_slots:
+                slot.material = material
+        shadowed = direct_light(targets, image)
+        for obj in placed:
+            obj.visible_shadow = False
+        unshadowed = direct_light(targets, image)
+    finally:
+        scene.world = world
+        bpy.data.objects.remove(lamp)
+        bpy.data.lights.remove(light)
+        bpy.data.images.remove(image)
+        bpy.data.materials.remove(material)
+    lit = unshadowed > UNLIT
+    return np.where(lit, np.clip(shadowed / np.where(lit, unshadowed, 1), 0, 1), 1)
+
+
 def same_matrix(a, b):
     return all(abs(x - y) < 1e-4 for row_a, row_b in zip(a, b) for x, y in zip(row_a, row_b))
 
 
 def atlas_size(piece):
+    if piece.occlusion_size:
+        return piece.occlusion_size
     area = sum(surface_area(mesh) for mesh in piece.meshes)
     wanted = math.sqrt(area) * TEXELS_PER_METER * PACKING_SLACK
     size = int(min(MAX_SIZE, max(MIN_SIZE, 2 ** math.ceil(math.log2(max(1, wanted))))))
@@ -304,19 +477,22 @@ def place(entries, pieces, collection, material):
     return placed
 
 
-def bake_all(pieces, cache_dir, force, on_progress):
+def bake_all(pieces, context, analyses, cache_dir, force, on_progress):
     scene = bpy.context.scene
     for obj in scene.objects:
         obj.hide_render = True
     collection = bpy.data.collections.new("_granny_context")
     scene.collection.children.link(collection)
     material, image_node = occlusion_material()
-    signatures = {name: cache.mesh_signature(piece.meshes) for name, piece in pieces.items()}
+    pool = {**context, **pieces}
+    signatures = {name: cache.mesh_signature(piece.meshes) for name, piece in pool.items()}
     results = {}
     try:
         for index, name in enumerate(sorted(pieces)):
             on_progress(index / len(pieces), f"Occlusion and grime: {name}")
-            results[name] = bake_piece(name, pieces, signatures, cache_dir, force, collection, material, image_node)
+            results[name] = bake_piece(
+                name, pool, signatures, cache_dir, force, collection, material, image_node, analyses
+            )
     finally:
         for obj in list(collection.objects):
             bpy.data.objects.remove(obj)
@@ -327,14 +503,16 @@ def bake_all(pieces, cache_dir, force, on_progress):
     return results
 
 
-def bake_piece(name, pieces, signatures, cache_dir, force, collection, material, image_node):
+def bake_piece(name, pieces, signatures, cache_dir, force, collection, material, image_node, analyses):
     piece = pieces[name]
     target, neighbors = recipe(name, pieces)
-    size = atlas_size(piece)
+    size = apart_from(atlas_size(piece), roughness_texture_sizes(piece, analyses))
     layout = [(entry, [round(v, 4) for row in matrix for v in row]) for entry, matrix in neighbors]
+    lamp = lamp_position(name, pieces)
+    lamp_key = None if lamp is None else ([round(v, 4) for v in lamp], LAMP_RADIUS, LAMP_SAMPLES, LAMP_VERSION)
     key = cache.digest(
         signatures[name], sorted((n, signatures[n]) for n in {e for e, _ in neighbors}), size, SETTINGS, layout,
-        piece.pack_uv,
+        piece.pack_uv, *([lamp_key] if lamp_key else []),
     )
     directory = os.path.join(cache_dir, "occlusion", f"{name}_{key}")
     png = os.path.join(directory, f"{name}_occlusion.png")
@@ -358,7 +536,11 @@ def bake_piece(name, pieces, signatures, cache_dir, force, collection, material,
             part.obj.data.uv_layers.active = part.obj.data.uv_layers[UV_OCCLUSION]
         bake(targets, "EMIT", RENDER_SAMPLES)
         data = images.box_blur(images.pixels(image), BLUR_PASSES)
-        rgb = np.stack([data[..., 0], data[..., 1], np.zeros(data.shape[:2])], -1)
+        lit = np.zeros(data.shape[:2])
+        if lamp is not None:
+            visibility = lamp_visibility(targets, others, lamp, size, collection)
+            lit = images.box_blur(visibility[..., None], BLUR_PASSES)[..., 0]
+        rgb = np.stack([data[..., 0], data[..., 1], lit], -1)
         images.save_png(png, rgb, "Non-Color")
         if not piece.uv_owner:
             save_uvs(uvs, piece)
@@ -366,5 +548,6 @@ def bake_piece(name, pieces, signatures, cache_dir, force, collection, material,
         for obj in targets + others:
             bpy.data.objects.remove(obj)
         bpy.data.images.remove(image)
-    progress.detail(f"{name}: {size}px occlusion, {len(others)} neighbor parts")
+    lamp_note = ", lamp shadows" if lamp is not None else ""
+    progress.detail(f"{name}: {size}px occlusion{lamp_note}, {len(others)} neighbor parts")
     return png

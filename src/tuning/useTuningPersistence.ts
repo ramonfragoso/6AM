@@ -5,6 +5,8 @@ import { sameKind } from "./useTuningControls"
 
 const NOT_SAVED_FROM_PANEL = false
 
+const UNSAVED_FOLDER = "Testing"
+
 export function useTuningPersistence() {
   const status = useRef("Values load from public/tuning.json")
 
@@ -43,7 +45,7 @@ async function revert(status: RefObject<string>) {
 
 function currentTuning(): SavedTuning {
   const values = Object.entries(levaStore.getData())
-    .filter(([, item]) => "value" in item)
+    .filter(([path, item]) => "value" in item && !path.split(".").includes(UNSAVED_FOLDER))
     .map(([path, item]) => [path, (item as { value: unknown }).value])
   return Object.fromEntries(values)
 }

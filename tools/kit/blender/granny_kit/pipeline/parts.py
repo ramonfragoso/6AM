@@ -11,6 +11,8 @@ from mathutils import Matrix
 from . import progress
 
 PREFAB_PREFIX = "prefab_"
+CONTEXT_ONLY_PROPERTY = "granny_context_only"
+OCCLUSION_SIZE_PROPERTY = "granny_occlusion_size"
 ANCHOR_PREFIX = "anchor_"
 ANCHOR_SEPARATOR = "__"
 EXPORT_PREFIX = "kit_"
@@ -31,7 +33,7 @@ PLACED_WALL_VARIANTS = {
     "wall_4m": ("col_start", "col_end", "col_both"),
     "wall_6m": ("col_start", "col_end", "col_both"),
 }
-PLACEMENT_VARIANTS = {"column_corner": ("far",)}
+PLACEMENT_VARIANTS = {"column_corner": ("far",), "safe_room_exterior": ("end",)}
 WALL_PATTERN = re.compile(r"wall_\d+m$")
 PLACEHOLDER_MATERIAL = "_granny_unassigned"
 PLACEHOLDER_COLOR = (0.5, 0.5, 0.5, 1.0)
@@ -55,6 +57,8 @@ class Piece:
     anchors: list = field(default_factory=list)
     uv_owner: str = None
     pack_uv: bool = False
+    context_only: bool = False
+    occlusion_size: int = 0
 
     @property
     def meshes(self):
@@ -69,16 +73,20 @@ def prefab_roots(collection_name):
 
 def descendants(obj):
     for child in sorted(obj.children, key=lambda o: o.name):
+        if child.name.startswith(PREFAB_PREFIX):
+            continue
         yield child
         yield from descendants(child)
 
 
-def build_pieces(collection_name, export_collection, mapping_of):
+def build_pieces(collection_name, export_collection, mapping_of, only=None):
     depsgraph = bpy.context.evaluated_depsgraph_get()
     kit_objects = set(bpy.data.collections[collection_name].all_objects)
     pieces = {}
     for root in prefab_roots(collection_name):
         name = root.name[len(PREFAB_PREFIX):]
+        if only is not None and name not in only:
+            continue
         members = [o for o in descendants(root) if o in kit_objects]
         meshes = [o for o in members if o.type == "MESH"]
         if not meshes:
@@ -86,7 +94,10 @@ def build_pieces(collection_name, export_collection, mapping_of):
             continue
         export_root = bpy.data.objects.new(EXPORT_PREFIX + name, None)
         export_collection.objects.link(export_root)
-        piece = Piece(name, export_root)
+        piece = Piece(
+            name, export_root, context_only=bool(root.get(CONTEXT_ONLY_PROPERTY, False)),
+            occlusion_size=int(root.get(OCCLUSION_SIZE_PROPERTY, 0)),
+        )
         to_root = root.matrix_world.inverted()
         for source in meshes:
             piece.parts.append(
@@ -209,6 +220,7 @@ def edit_uv_layer(objects, layer_name):
         obj.select_set(True)
     bpy.context.view_layer.objects.active = objects[0]
     bpy.ops.object.mode_set(mode="EDIT")
+    bpy.ops.mesh.reveal(select=True)
     bpy.ops.mesh.select_all(action="SELECT")
 
 
@@ -294,7 +306,7 @@ def add_variant(pieces, collection, name, suffix):
     variant_name = f"{name}{VARIANT_SEPARATOR}{suffix}"
     root = bpy.data.objects.new(EXPORT_PREFIX + variant_name, None)
     collection.objects.link(root)
-    variant = Piece(variant_name, root, uv_owner=name)
+    variant = Piece(variant_name, root, uv_owner=name, occlusion_size=base.occlusion_size)
     for part in base.parts:
         obj = bpy.data.objects.new(f"{EXPORT_PREFIX}{variant_name}_{part.name}", part.obj.data)
         collection.objects.link(obj)

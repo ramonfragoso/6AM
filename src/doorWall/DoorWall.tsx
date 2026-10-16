@@ -16,8 +16,14 @@ import {
 } from "./doorWall"
 import { useDoorWallTuning } from "./useDoorWallTuning"
 
+export function DoorWallLight({ wall }: { wall: Placement }) {
+  const { light } = useDoorWallTuning()
+  const frame = useMemo(() => doorFrameInWall(wall), [wall])
+  return <DoorLight frame={frame} settings={light} />
+}
+
 export function DoorWall({ kit, wall }: { kit: Kit; wall: Placement }) {
-  const { open, light } = useDoorWallTuning()
+  const { open } = useDoorWallTuning()
   const texturesFor = useMemo(() => kitTexturesOf(kit), [kit])
   const holedWall = useSurfacedModel(DOOR_WALL_URL, DOOR_WALL_NODE, texturesFor)
   const leaf = useSurfacedModel(DOOR_WALL_URL, DOOR_LEAF_NODE, texturesFor)
@@ -37,7 +43,6 @@ export function DoorWall({ kit, wall }: { kit: Kit; wall: Placement }) {
       <group matrix={leafMatrix} matrixAutoUpdate={false}>
         <primitive object={leaf} />
       </group>
-      <DoorLight frame={frame} settings={light} />
     </>
   )
 }

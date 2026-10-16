@@ -4,6 +4,8 @@ import { levaStore } from "leva"
 import { type RefObject, useCallback, useEffect, useMemo, useRef } from "react"
 import { PointLight, PointLightHelper, type Vector3Tuple } from "three"
 import { useDebugMode } from "@/debug/useDebugMode"
+import { hauntState } from "@/haunts/hauntState"
+import { loopState } from "@/passage/loopState"
 import { type Flame, FLAME_GROUPS, type FlameGroup, type FlamesByGroup, flameSize } from "./flames"
 import type { FlameLightSettings, FlameSettings } from "./useFlamesTuning"
 
@@ -33,6 +35,19 @@ type FlameLightsProps = { flames: FlamesByGroup; settings: GroupSettings }
 type PointLights = RefObject<(PointLight | null)[]>
 
 export type LitFlame = { position: Vector3Tuple; light: FlameLightSettings; castShadow: boolean }
+
+const staleShadowListeners = new Set<() => void>()
+
+export function refreshStaticShadows() {
+  staleShadowListeners.forEach((refresh) => refresh())
+}
+
+export function flickerWave(time: number, phase: number) {
+  return (
+    WAVER_WEIGHTS[0] * Math.sin(time * WAVER_SPEEDS[0] + phase) +
+    WAVER_WEIGHTS[1] * Math.sin(time * WAVER_SPEEDS[1] + 2 * phase)
+  )
+}
 
 export function FlameLights({ flames, settings }: FlameLightsProps) {
   const lit = useMemo(() => litFlames(flames, settings), [flames, settings])
@@ -100,7 +115,12 @@ function useStaticShadows(pointLights: PointLights, lit: LitFlame[]) {
       for (const light of pointLights.current) if (light) light.shadow.needsUpdate = true
     }
     refresh()
-    return levaStore.useStore.subscribe(refresh)
+    staleShadowListeners.add(refresh)
+    const unsubscribe = levaStore.useStore.subscribe(refresh)
+    return () => {
+      staleShadowListeners.delete(refresh)
+      unsubscribe()
+    }
   }, [pointLights, lit])
 }
 
@@ -108,10 +128,8 @@ function waver(pointLights: (PointLight | null)[], lit: LitFlame[], time: number
   lit.forEach(({ light }, index) => {
     const pointLight = pointLights[index]
     if (!pointLight) return
-    const phase = index * PHASE_PER_LIGHT
-    const wave =
-      WAVER_WEIGHTS[0] * Math.sin(time * WAVER_SPEEDS[0] + phase) +
-      WAVER_WEIGHTS[1] * Math.sin(time * WAVER_SPEEDS[1] + 2 * phase)
-    pointLight.intensity = light.intensity * (1 + light.flicker * wave)
+    const wave = flickerWave(time, index * PHASE_PER_LIGHT)
+    pointLight.intensity =
+      light.intensity * (1 + light.flicker * wave) * loopState.houseLevel * hauntState.houseLight
   })
 }

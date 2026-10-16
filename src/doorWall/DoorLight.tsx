@@ -3,6 +3,7 @@ import { useMemo, useRef } from "react"
 import { Object3D, type SpotLight, SpotLightHelper } from "three"
 import { useDebugMode } from "@/debug/useDebugMode"
 import type { Placement } from "@/kit/kitPieces"
+import { useHouseLightLevel } from "@/passage/useHouseLightLevel"
 import { doorLightAim, type DoorLightSettings } from "./doorLight"
 
 type DoorLightProps = { frame: Placement; settings: DoorLightSettings }
@@ -13,6 +14,7 @@ export function DoorLight({ frame, settings }: DoorLightProps) {
   const debugMode = useDebugMode()
   useHelper(debugMode ? spotLight : null, SpotLightHelper, settings.color)
   const { position, target: aimedAt, angle } = doorLightAim(frame, settings)
+  useHouseLightLevel(spotLight, settings.intensity)
 
   return (
     <>

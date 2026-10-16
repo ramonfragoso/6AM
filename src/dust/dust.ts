@@ -26,6 +26,7 @@ import {
   viewportSize,
 } from "three/tsl"
 import { AdditiveBlending, PointsNodeMaterial, Sprite, type Node } from "three/webgpu"
+import { outsideSafeRooms } from "@/safeRoom/safeRoomVolumes"
 import { DUST_LIGHTS, dustLights } from "./dustLights"
 
 export const DUST_PARTICLES = 6000
@@ -159,7 +160,8 @@ export function createDust() {
       .mul(edgeFade)
       .mul(nearFade)
       .mul(coverage)
-      .mul(visibility),
+      .mul(visibility)
+      .mul(outsideSafeRooms(position)),
   )
 
   const fromDotCenter = uv().sub(0.5).length().mul(2)
