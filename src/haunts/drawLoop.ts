@@ -37,7 +37,7 @@ export function drawLoop(
     fired.push({ name: rule.name, factors })
     for (const outcome of LOOP_OUTCOMES) weights[outcome] *= factors[outcome] ?? 1
   }
-  for (const kind of HAUNT_KINDS) if (hauntsOfKind(kind).length === 0) weights[kind] = 0
+  for (const kind of HAUNT_KINDS) if (pooledHaunts(kind, standings).length === 0) weights[kind] = 0
   const odds = normalized(weights)
   const outcome = pickOutcome(odds, random)
   const haunt =
@@ -102,9 +102,8 @@ function pickHaunt(
   random: () => number,
 ) {
   const pooled = pooledHaunts(kind, standings)
-  const candidates = pooled.length > 0 ? pooled : hauntsOfKind(kind)
-  const fresh = candidates.filter((haunt) => haunt.id !== previous)
-  const choices = fresh.length > 0 ? fresh : candidates
+  const fresh = pooled.filter((haunt) => haunt.id !== previous)
+  const choices = fresh.length > 0 ? fresh : pooled
   return choices[Math.floor(random() * choices.length)] ?? null
 }
 

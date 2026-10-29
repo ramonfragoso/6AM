@@ -9,6 +9,8 @@ const YAW_FIRST = "YXZ"
 
 const UNIT_SCALE = 1
 
+const NO_STRETCH = [1, 1] as const
+
 type PieceCount = { piece: KitPiece; count: number }
 
 type PartInstances = { piece: KitPiece; part: PiecePart; mesh: InstancedMesh }
@@ -28,9 +30,11 @@ export function placementMatrix({
   rotationY,
   tilt = NO_TILT,
   scale = UNIT_SCALE,
+  stretch = NO_STRETCH,
 }: Placement) {
   const rotation = new Quaternion().setFromEuler(new Euler(tilt[0], rotationY, tilt[1], YAW_FIRST))
-  return new Matrix4().compose(new Vector3(...position), rotation, new Vector3().setScalar(scale))
+  const scaled = new Vector3(scale * stretch[0], scale * stretch[1], scale)
+  return new Matrix4().compose(new Vector3(...position), rotation, scaled)
 }
 
 function usePieceCounts(placements: Placement[]) {

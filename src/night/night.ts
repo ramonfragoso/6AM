@@ -16,12 +16,13 @@ import {
   freshRefills,
   freshStandings,
   missHaunt,
-  refillEmptyKinds,
+  refillWhenEmpty,
   type Refills,
   type Standings,
 } from "@/haunts/pool"
 import { loopState } from "@/passage/loopState"
 import { type LoopOutcome, type LoopRecord, passes, type Way } from "./loops"
+import { nightClock } from "./nightClock"
 import { nightEvents } from "./nightEvents"
 
 export const FINAL_HOUR = 6
@@ -59,13 +60,14 @@ type LoopStart = { forced: boolean; number: number; hour: number }
 
 const EVEN_WEIGHTS: OutcomeWeights = { loud: 1, subtle: 1, clean: 1 }
 
-const MILLISECONDS = 1000
+type NightDrawSettings = DrawSettings & { nextLoop: string; forcedOnce: string | null }
 
-const drawSettings: DrawSettings & { nextLoop: string } = {
+const drawSettings: NightDrawSettings = {
   odds: { atMidnight: EVEN_WEIGHTS, atSix: EVEN_WEIGHTS },
   enabledRules: new Set(),
   finalHour: FINAL_HOUR,
   nextLoop: DRAW,
+  forcedOnce: null,
 }
 
 export const nightState: NightState = {
@@ -79,10 +81,6 @@ export const nightState: NightState = {
 }
 
 beginNight()
-
-export function nightClock() {
-  return performance.now() / MILLISECONDS
-}
 
 export function startNight() {
   beginNight()
@@ -106,7 +104,7 @@ export function endLoop(way: Way) {
   if (loop.haunt && manifested) {
     if (passed) catchHaunt(standings, loop.haunt)
     else missHaunt(standings, loop.haunt)
-    refillEmptyKinds(standings, refills)
+    refillWhenEmpty(standings, refills)
   }
   nightEvents.emit({ kind: "verdict", passed, way })
   if (passed && nightState.hour === FINAL_HOUR) {
@@ -144,6 +142,15 @@ export function setEnabledRules(names: Iterable<string>) {
   drawSettings.enabledRules = new Set(names)
 }
 
+export function forceLoopOnce(choice: string) {
+  drawSettings.forcedOnce = choice
+  if (canChooseAgain()) chooseLoop()
+}
+
+export function loopForcedOnce() {
+  return drawSettings.forcedOnce
+}
+
 export function setNextLoop(choice: string) {
   if (choice === drawSettings.nextLoop) return
   drawSettings.nextLoop = choice
@@ -165,9 +172,11 @@ function beginNight() {
 
 function chooseLoop() {
   resetHauntState()
-  const forced = drawSettings.nextLoop !== DRAW
+  const choice = drawSettings.forcedOnce ?? drawSettings.nextLoop
+  drawSettings.forcedOnce = null
+  const forced = choice !== DRAW
   const draw = forced
-    ? forcedLoop(drawSettings.nextLoop)
+    ? forcedLoop(choice)
     : drawLoop(nightState, drawSettings, nightState.standings)
   nightState.loop = currentLoop(draw, {
     forced,

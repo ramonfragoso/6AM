@@ -2,6 +2,7 @@ import { useFrame } from "@react-three/fiber"
 import { useMemo } from "react"
 import type { PieceModel } from "@/kit/useKit"
 import { loopState } from "@/passage/loopState"
+import { voidOpen } from "@/void/voidOpen"
 import { disposeInstances, instancesOf, type PartInstances, placeInstance } from "./partInstances"
 import { useDisposeWhenDropped } from "./useDisposeWhenDropped"
 import {
@@ -12,13 +13,14 @@ import {
   ROOMS,
   type RoomPart,
   type RoomPiece,
+  type RoomShowing,
+  partShown,
   roomMatrix,
-  shownWith,
 } from "./safeRooms"
 
 type PlacedInstances = PartInstances & { placements: RoomPart[] }
 
-type Shell = { instances: PlacedInstances[]; farDoorPlaced: boolean | null }
+type Shell = { instances: PlacedInstances[]; placedAs: string | null }
 
 export function useRoomShell(room: Record<RoomPiece, PieceModel>) {
   const shell = useMemo<Shell>(
@@ -30,19 +32,21 @@ export function useRoomShell(room: Record<RoomPiece, PieceModel>) {
           placements,
         }))
       }),
-      farDoorPlaced: null,
+      placedAs: null,
     }),
     [room],
   )
 
   useDisposeWhenDropped(shell, disposeShell)
   useFrame(() => {
-    if (shell.farDoorPlaced === loopState.startRoomFarDoor) return
-    shell.farDoorPlaced = loopState.startRoomFarDoor
+    const showing = roomShowing()
+    const placedAs = showingKey(showing)
+    if (shell.placedAs === placedAs) return
+    shell.placedAs = placedAs
     for (const instances of shell.instances) {
-      instances.placements.forEach(({ room: placedIn, local, farWall }, index) => {
-        const shown = shownWith(farWall, loopState.startRoomFarDoor)
-        placeInstance(instances, index, shown ? roomMatrix(placedIn).multiply(local) : null)
+      instances.placements.forEach((part, index) => {
+        const shown = partShown(part, showing)
+        placeInstance(instances, index, shown ? roomMatrix(part.room).multiply(part.local) : null)
       })
     }
   })
@@ -63,6 +67,14 @@ export function useExteriors(exterior: Record<ExteriorPiece, PieceModel>) {
   )
   useDisposeWhenDropped(instances, disposeInstances)
   return useMemo(() => instances.map(({ mesh }) => mesh), [instances])
+}
+
+export function roomShowing(): RoomShowing {
+  return { startRoomFarDoor: loopState.startRoomFarDoor, endRoomGone: voidOpen() }
+}
+
+function showingKey({ startRoomFarDoor, endRoomGone }: RoomShowing) {
+  return `${startRoomFarDoor} ${endRoomGone}`
 }
 
 function disposeShell({ instances }: Shell) {

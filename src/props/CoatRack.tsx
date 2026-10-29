@@ -1,11 +1,20 @@
 import { CylinderCollider, RigidBody } from "@react-three/rapier"
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { useSurfacedModel } from "@/models/useSurfacedModel"
-import { COAT_RACK_NODE, COAT_RACK_URL, coatRackCollider, coatRackPlacement } from "./coatRack"
+import {
+  COAT_RACK_NODE,
+  COAT_RACK_URL,
+  coatRackCollider,
+  coatRackPlacement,
+  placedCoatRack,
+} from "./coatRack"
 import type { FurnitureSpot } from "./propPlacements"
+import { useBareCoatRack } from "./useBareCoatRack"
 
 export function CoatRack({ spot }: { spot: FurnitureSpot }) {
   const coatRack = useSurfacedModel(COAT_RACK_URL, COAT_RACK_NODE)
+  useBareCoatRack(coatRack)
+  useEffect(() => void Object.assign(placedCoatRack, spot), [spot])
   const placement = useMemo(() => coatRackPlacement(spot), [spot])
   const { args, position } = coatRackCollider(placement)
 

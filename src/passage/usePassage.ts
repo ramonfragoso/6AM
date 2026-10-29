@@ -1,9 +1,10 @@
-import { useThree } from "@react-three/fiber"
 import { type RapierRigidBody, useAfterPhysicsStep } from "@react-three/rapier"
 import { type RefObject, useCallback, useEffect, useMemo, useRef } from "react"
 import { type Euler, MathUtils, Vector3 } from "three"
 import { endLoop, nightState } from "@/night/night"
-import { nightEvents } from "@/night/nightEvents"
+import { type NightEvent, nightEvents } from "@/night/nightEvents"
+import { playerPose } from "@/player/playerPose"
+import { opensOntoVoid } from "@/void/voidOpen"
 import type { Way } from "@/night/loops"
 import {
   type Doorway,
@@ -25,6 +26,7 @@ import {
   wrappedAngle,
 } from "./passage"
 import { startRoomSpawn } from "./spawn"
+import { type DoorSounding, useDoorSound } from "./useDoorSound"
 import { usePassageControls } from "./usePassageControls"
 import { usePassageTuning } from "./usePassageTuning"
 import { usePromptTuning } from "./usePromptTuning"
@@ -37,12 +39,13 @@ export type PlayerRig = {
 
 type DoorChoice = { doorway: Doorway; entering: boolean }
 
-type Passage = DoorChoice & {
-  room: Room
-  route: PassageRoute
-  shape: PassageShape
-  startedAt: number
-}
+type Passage = DoorChoice &
+  DoorSounding & {
+    room: Room
+    route: PassageRoute
+    shape: PassageShape
+    startedAt: number
+  }
 
 type DoorTarget = DoorChoice & { center: Vector3; heading: Vector3; awayFromHinge: Vector3 }
 
@@ -67,10 +70,10 @@ const HIDDEN = 0
 const SHOWN = 1
 
 export function usePassage(rig: PlayerRig, prompt: RefObject<HTMLElement | null>, viewed: boolean) {
-  const camera = useThree((state) => state.camera)
   const readControls = usePassageControls()
   const tuning = usePassageTuning()
   const promptTuning = usePromptTuning()
+  const soundDoor = useDoorSound()
   const doors = useMemo(doorTargets, [])
   const passage = useRef<Passage | null>(null)
   const heldPose = useRef<Pose | null>(null)
@@ -98,7 +101,7 @@ export function usePassage(rig: PlayerRig, prompt: RefObject<HTMLElement | null>
     (door: DoorTarget, time: number) => {
       const room = roomOfDoorway(door.doorway)
       const from = {
-        eye: camera.position.clone(),
+        eye: playerPose.eye.clone(),
         yaw: rig.view.current.y,
         pitch: rig.view.current.x,
       }
@@ -114,12 +117,13 @@ export function usePassage(rig: PlayerRig, prompt: RefObject<HTMLElement | null>
         },
         shape: passageShape(tuning.lineUp, tuning.through, tuning),
         startedAt: time,
+        doorSounded: false,
       }
       if (door.entering) loopState.lampRoom = room
       loopState.passing = true
       rig.body.current?.setEnabled(false)
     },
-    [camera, rig, tuning],
+    [rig, tuning],
   )
 
   const drive = useCallback(
@@ -135,8 +139,9 @@ export function usePassage(rig: PlayerRig, prompt: RefObject<HTMLElement | null>
       loopState.lampLevel = running.entering ? opened : 1 - closed
       loopState.houseLevel = running.entering ? 1 - closed : opened
       heldPose.current = pose
+      soundDoor(running, progress, tuning.duration, tuning.timing)
     },
-    [tuning],
+    [tuning, soundDoor],
   )
 
   const finish = useCallback(
@@ -172,7 +177,7 @@ export function usePassage(rig: PlayerRig, prompt: RefObject<HTMLElement | null>
   useEffect(
     () =>
       nightEvents.listen((event) => {
-        if (event.kind === "newNight") respawn()
+        if (event.kind === "newNight" || fellIntoVoid(event)) respawn()
       }),
     [respawn],
   )
@@ -193,7 +198,7 @@ export function usePassage(rig: PlayerRig, prompt: RefObject<HTMLElement | null>
         return true
       }
       const door = viewed
-        ? reachableDoor(doors, camera.position, rig.view.current.y, promptTuning)
+        ? reachableDoor(doors, playerPose.eye, rig.view.current.y, promptTuning)
         : null
       fadePrompt(door ? SHOWN : HIDDEN, delta)
       if (door && open) begin(door, time)
@@ -207,7 +212,6 @@ export function usePassage(rig: PlayerRig, prompt: RefObject<HTMLElement | null>
       fadePrompt,
       viewed,
       doors,
-      camera,
       rig,
       promptTuning,
       begin,
@@ -243,12 +247,17 @@ function reachableDoor(
   { reach, facing }: { reach: number; facing: number },
 ) {
   return (
-    doors[loopState.whereabouts].find(({ center, heading }) => {
+    doors[loopState.whereabouts].find(({ doorway, center, heading }) => {
+      if (opensOntoVoid(doorway)) return false
       const toDoor = center.clone().sub(eye).setY(0)
       if (toDoor.length() > reach || toDoor.dot(heading) <= 0) return false
       return forwardOf(yaw).angleTo(toDoor) <= MathUtils.degToRad(facing)
     }) ?? null
   )
+}
+
+function fellIntoVoid(event: NightEvent) {
+  return event.kind === "verdict" && event.way === "down"
 }
 
 function placeBody(rig: PlayerRig, pose: Pose) {

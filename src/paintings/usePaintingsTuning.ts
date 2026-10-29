@@ -2,7 +2,7 @@ import { useMemo } from "react"
 import type { Vector3Tuple } from "three"
 import { slider } from "@/debug/slider"
 import { useTuningControls } from "@/tuning/useTuningControls"
-import type { HouseArrangements, PaintingSwaps } from "./hangPaintings"
+import type { HouseArrangements } from "./hangPaintings"
 
 const STEP = 0.001
 
@@ -15,7 +15,7 @@ const SINGLE_PAINTING_GAP = 0
 export type GlassSettings = { glassReflection: number; glassRoughness: number }
 
 export function usePaintingsTuning() {
-  const { glassReflection, glassRoughness, scaryPapa, scaryMonks } = useTuningControls(
+  const { glassReflection, glassRoughness } = useTuningControls(
     "Paintings",
     {
       glassReflection: fineSlider(
@@ -30,14 +30,6 @@ export function usePaintingsTuning() {
         0.6,
         "Blur of the glass reflections: higher is a softer sheen",
       ),
-      scaryPapa: {
-        value: false,
-        hint: "Swaps the portrait on the Corner's end wall for its scary version",
-      },
-      scaryMonks: {
-        value: false,
-        hint: "Swaps Two Monks on the right wall for Saturn Devouring His Son",
-      },
     },
     { collapsed: true },
   )
@@ -45,7 +37,7 @@ export function usePaintingsTuning() {
     "Paintings.End Wall",
     {
       ...groupControls(1.85),
-      portrait: rotationControl("The portrait (Papa or its scary version)"),
+      portrait: rotationControl("The portrait (Papa, or the Scary Pope Haunt)"),
     },
     { collapsed: true },
   )
@@ -64,7 +56,7 @@ export function usePaintingsTuning() {
     {
       ...groupControls(1.75),
       gap: fineSlider(0.25, 0, 1, "Meters between neighboring frames"),
-      left: rotationControl("The left painting (Two Monks or Saturn)"),
+      left: rotationControl("The left painting (Two Monks)"),
       middle: rotationControl("The middle painting (Two Women Eating)"),
       right: rotationControl("The right painting (Reading)"),
     },
@@ -75,7 +67,6 @@ export function usePaintingsTuning() {
     () => ({ glassReflection, glassRoughness }),
     [glassReflection, glassRoughness],
   )
-  const swaps = useMemo<PaintingSwaps>(() => ({ scaryPapa, scaryMonks }), [scaryPapa, scaryMonks])
   const arrangements = useMemo<HouseArrangements>(
     () => ({
       endWall: { ...end, gap: SINGLE_PAINTING_GAP, rotations: [end.portrait] },
@@ -84,7 +75,7 @@ export function usePaintingsTuning() {
     }),
     [end, left, right],
   )
-  return { glass, swaps, arrangements }
+  return { glass, arrangements }
 }
 
 function groupControls(height: number) {

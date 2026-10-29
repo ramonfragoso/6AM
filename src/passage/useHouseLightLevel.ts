@@ -1,11 +1,14 @@
 import { useFrame } from "@react-three/fiber"
-import type { RefObject } from "react"
-import type { Light } from "three"
-import { hauntState } from "@/haunts/hauntState"
+import { type RefObject, useMemo } from "react"
+import { Color, type ColorRepresentation, type Light } from "three"
+import { hauntLight } from "@/haunts/hauntedLight"
 import { loopState } from "./loopState"
 
-export function useHouseLightLevel(light: RefObject<Light>, intensity: number) {
-  useFrame(() => {
-    light.current.intensity = intensity * loopState.houseLevel * hauntState.houseLight
-  })
+export function useHouseLightLevel(
+  light: RefObject<Light>,
+  intensity: number,
+  color: ColorRepresentation,
+) {
+  const base = useMemo(() => new Color(color), [color])
+  useFrame(() => hauntLight(light.current, intensity * loopState.houseLevel, base))
 }

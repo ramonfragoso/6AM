@@ -14,7 +14,7 @@ export function DoorLight({ frame, settings }: DoorLightProps) {
   const debugMode = useDebugMode()
   useHelper(debugMode ? spotLight : null, SpotLightHelper, settings.color)
   const { position, target: aimedAt, angle } = doorLightAim(frame, settings)
-  useHouseLightLevel(spotLight, settings.intensity)
+  useHouseLightLevel(spotLight, settings.intensity, settings.color)
 
   return (
     <>

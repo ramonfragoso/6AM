@@ -72,6 +72,7 @@ export type Placement = {
   rotationY: number
   tilt?: readonly [x: number, z: number]
   scale?: number
+  stretch?: readonly [x: number, y: number]
 }
 
 const SOLID_PIECES: ReadonlySet<KitPiece> = new Set<KitPiece>([

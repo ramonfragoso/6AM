@@ -4,7 +4,7 @@ export const LOOP_OUTCOMES = ["loud", "subtle", "clean"] as const
 
 export type LoopOutcome = HauntKind | "clean"
 
-export type Way = "ahead" | "back"
+export type Way = "ahead" | "back" | "down"
 
 export type LoopRecord = {
   number: number
@@ -18,5 +18,6 @@ export type LoopRecord = {
 }
 
 export function passes(outcome: LoopOutcome, way: Way) {
+  if (way === "down") return false
   return outcome === "clean" ? way === "ahead" : way === "back"
 }

@@ -15,6 +15,7 @@ import {
 } from "./partInstances"
 import { DOORWAYS, type Doorway, doorFrameMatrix, farDoorShown } from "./safeRooms"
 import { useDisposeWhenDropped } from "./useDisposeWhenDropped"
+import { roomShowing } from "./useRoomShell"
 import { ROOM_SURFACE } from "./useSafeRoomModel"
 
 type PlacedDoors = { frames: PartInstances[]; leaves: PartInstances[]; placedAs: string[] }
@@ -44,7 +45,7 @@ export function useSafeRoomDoors(kit: Kit, texturesFor: TexturesFor) {
 }
 
 function placeDoor(doors: PlacedDoors, doorway: Doorway, index: number) {
-  const shown = farDoorShown(doorway, loopState.startRoomFarDoor)
+  const shown = farDoorShown(doorway, roomShowing())
   const angle = loopState.leafAngles[doorway]
   const placedAs = shown ? String(angle) : ""
   if (doors.placedAs[index] === placedAs) return

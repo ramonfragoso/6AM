@@ -13,6 +13,12 @@ export const PAINTINGS = {
 
 export type PaintingName = keyof typeof PAINTINGS
 
+export const RIGHT_WALL_PAINTINGS: readonly PaintingName[] = [
+  "twomonks",
+  "twowomaneating",
+  "reading",
+]
+
 export const PAINTING_NAMES = Object.keys(PAINTINGS) as PaintingName[]
 
 export type HungPainting = {

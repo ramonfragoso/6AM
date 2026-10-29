@@ -1,4 +1,4 @@
-import { BackSide, type Material, type MeshStandardMaterial } from "three"
+import { BackSide, type Material, type MeshStandardMaterial, Vector2, Vector4 } from "three"
 import {
   float,
   hash,
@@ -18,6 +18,8 @@ import {
 } from "three/tsl"
 import { MeshPhysicalNodeMaterial, MeshStandardNodeMaterial, type Node } from "three/webgpu"
 
+const NO_DIVISION = -1e4
+
 export const kitSurface = {
   occlusion: uniform(1),
   grime: uniform(0.6),
@@ -26,6 +28,17 @@ export const kitSurface = {
   tileBrightness: uniform(0.06),
   tileRoughness: uniform(0.08),
 }
+
+export const tileClip = {
+  enabled: uniform(0),
+  origin: uniform(new Vector2()),
+  along: uniform(new Vector2()),
+  halfAcross: uniform(0),
+  divisions: uniform(new Vector4().setScalar(NO_DIVISION)),
+  divisionHalfLength: uniform(0),
+}
+
+export const TILE_CLIP_DIVISIONS = 4
 
 export const candleWax = {
   roughness: uniform(0.5),
@@ -125,8 +138,30 @@ function randomizedTileInputs(
       .mul(source.emissiveIntensity)
   }
 
+  surface.maskNode = insideTiledArea()
+
   return {
     color: baseColor.mul(spread(TILE_BRIGHTNESS_SALT).mul(kitSurface.tileBrightness).add(1)),
     roughness: roughness.add(spread(TILE_ROUGHNESS_SALT).mul(kitSurface.tileRoughness)),
   }
+}
+
+function insideTiledArea() {
+  const along = positionWorld.z.sub(tileClip.origin.y).toVar()
+  const across = tileClip.origin.x.sub(positionWorld.x).abs()
+  const divisions = [
+    tileClip.divisions.x,
+    tileClip.divisions.y,
+    tileClip.divisions.z,
+    tileClip.divisions.w,
+  ]
+  const inside = divisions.reduce<Node<"bool">>(
+    (kept, division) =>
+      kept.and(along.sub(division).abs().greaterThan(tileClip.divisionHalfLength)),
+    along
+      .greaterThanEqual(tileClip.along.x)
+      .and(along.lessThanEqual(tileClip.along.y))
+      .and(across.lessThanEqual(tileClip.halfAcross)),
+  )
+  return tileClip.enabled.lessThan(0.5).or(inside)
 }

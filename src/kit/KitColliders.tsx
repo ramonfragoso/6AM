@@ -4,9 +4,9 @@ import { placementMatrix } from "./KitInstances"
 import { isSolid, type KitPiece, type Placement } from "./kitPieces"
 import type { Kit } from "./useKit"
 
-const DOORWAY_HALF_WIDTH = 0.73
+export const DOORWAY_HALF_WIDTH = 0.73
 
-const DOORWAY_HEIGHT = 2.8
+export const DOORWAY_HEIGHT = 2.8
 
 const UNIT_SCALE = 1
 
@@ -20,7 +20,7 @@ export function KitColliders({ kit, placements }: { kit: Kit; placements: Placem
     )
 }
 
-function collisionBoxes(piece: KitPiece, bounds: Box3) {
+export function collisionBoxes(piece: KitPiece, bounds: Box3) {
   if (piece !== "door_frame") return [bounds]
   const { min, max } = bounds
   return [

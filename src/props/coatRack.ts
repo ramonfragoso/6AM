@@ -11,9 +11,13 @@ export const COAT_RACK_SPOT: FurnitureSpot = {
   size: 1,
 }
 
+export const placedCoatRack: FurnitureSpot = { ...COAT_RACK_SPOT }
+
 const POLE_RADIUS = 0.31
 
 const POLE_HEIGHT = 2.608
+
+const FOOT_RADIUS = 0.35
 
 const DEGREES = Math.PI / 180
 
@@ -33,4 +37,8 @@ export function coatRackCollider({ position: [x, , z], scale }: CoatRackPlacemen
     args: [halfHeight, POLE_RADIUS * scale] as [halfHeight: number, radius: number],
     position: [x, halfHeight, z] as [x: number, y: number, z: number],
   }
+}
+
+export function coatRackObstacle({ x, z, size }: FurnitureSpot) {
+  return { x, z, radius: FOOT_RADIUS * size }
 }

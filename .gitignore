@@ -40,3 +40,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 __pycache__/
+
+# sound sources (encoded into public/sounds by tools/sounds/encode_sounds.py)
+/tools/sounds/sources/

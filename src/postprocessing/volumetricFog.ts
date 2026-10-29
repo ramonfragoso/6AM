@@ -17,7 +17,12 @@ import {
 } from "three/tsl"
 import { gaussianBlur } from "three/addons/tsl/display/GaussianBlurNode.js"
 import { Color, RedFormat, UnsignedByteType, type PerspectiveCamera } from "three/webgpu"
-import { insideSpans, lengthInSpans, safeRoomSpans } from "@/safeRoom/safeRoomVolumes"
+import {
+  fogAndDustShown,
+  insideSpans,
+  lengthInSpans,
+  safeRoomSpans,
+} from "@/safeRoom/safeRoomVolumes"
 
 const FLOOR_LEVEL = 0
 
@@ -110,7 +115,7 @@ export function createFog(camera: PerspectiveCamera, sceneDepth: any) {
       .sub(uniforms.rangeNear)
       .div(uniforms.rangeFar.sub(uniforms.rangeNear).max(MIN_RANGE))
       .clamp(0, 1)
-    return volumeFog.max(rangeFog)
+    return volumeFog.max(rangeFog).mul(fogAndDustShown)
   })
 
   const lowResolution = rtt(fogAmount(), null, null, {

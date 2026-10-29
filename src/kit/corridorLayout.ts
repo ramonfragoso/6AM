@@ -32,6 +32,12 @@ const TILE_JITTER = 0.0175
 
 const TILE_QUARTER_TURN = Math.PI / 2
 
+const TURNED_TILE_YAW = Math.PI / 4
+
+const TILE_REACH = Math.hypot(TILE_WIDTH, TILE_ROW_LENGTH) / 2
+
+const HALF_TILED_WIDTH = (TILES_ACROSS * TILE_WIDTH) / 2
+
 const FLIP_SEED = 1
 
 const YAW_SEED = 2
@@ -42,7 +48,7 @@ const TILT_Z_SEED = 4
 
 const FLOOR_OVERHANG_UNDER_END_WALL = 0.54
 
-const FLOOR_PLANK_ROW_LENGTH = 2.505
+export const FLOOR_PLANK_ROW_LENGTH = 2.505
 
 const FACING_FORWARD = 0
 
@@ -56,6 +62,8 @@ const TURN_RIGHT = -Math.PI / 2
 
 const LENGTH_TOLERANCE = 1e-3
 
+export const SECOND_CORRIDOR_START_Z = FIRST_HALF_WIDTH - COLUMN_INSET
+
 const SECOND_CORNER_JOINTS = [0]
 
 export type WallSide = "left" | "right"
@@ -65,6 +73,18 @@ export type WallSpot = { position: Vector3Tuple; rotationY: number; length: numb
 export type DoorSpot = { position: Vector3Tuple; rotationY: number }
 
 export type HouseDoors = { start: DoorSpot; end: DoorSpot }
+
+export type TileRun = { from: number; to: number }
+
+export type TiledArea = {
+  origin: [x: number, z: number]
+  from: number
+  to: number
+  halfAcross: number
+  runs: TileRun[]
+  divisions: number[]
+  divisionHalfLength: number
+}
 
 type RunOptions = {
   halfWidth: number
@@ -127,7 +147,7 @@ export function firstCorridorWall(
 }
 
 function secondCorridorOrigin(first: CorridorToken[]): [number, number] {
-  return [lengthOf(first) / 2 + CORNER_LENGTH / 2, FIRST_HALF_WIDTH - COLUMN_INSET]
+  return [lengthOf(first) / 2 + CORNER_LENGTH / 2, SECOND_CORRIDOR_START_Z]
 }
 
 export function secondCorridorColumn(
@@ -288,7 +308,7 @@ function cornerPlacements(at: number): Placement[] {
 
 function secondCorridorPlacements(tokens: CorridorToken[]): Placement[] {
   const length = lengthOf(tokens)
-  const columnJoints = columnJointsOf(tokens).filter((joint) => joint > LENGTH_TOLERANCE)
+  const columnJoints = secondColumnJoints(tokens)
   const run = corridorRun(tokens, {
     halfWidth: SECOND_HALF_WIDTH,
     column: "column_narrow",
@@ -310,21 +330,115 @@ function secondCorridorPlacements(tokens: CorridorToken[]): Placement[] {
 }
 
 function floorTiles(columnJoints: number[], length: number): Placement[] {
-  const stops = columnJoints.filter((joint) => joint < length - LENGTH_TOLERANCE)
+  const placements: Placement[] = []
+  let firstRow = 0
+  for (const run of tileRuns(columnJoints, length)) {
+    const rows = tileRows(run.from, run.to, firstRow)
+    placements.push(...rows.placements)
+    firstRow += rows.count
+  }
+  return placements
+}
+
+function tileRuns(columnJoints: number[], length: number): TileRun[] {
+  const stops = innerJoints(columnJoints, length)
   const columnAtEnd = columnJoints.some((joint) => Math.abs(joint - length) < LENGTH_TOLERANCE)
   const bounds = [
     DIVISION_HALF_LENGTH,
     ...stops.flatMap((joint) => [joint - DIVISION_HALF_LENGTH, joint + DIVISION_HALF_LENGTH]),
     columnAtEnd ? length - DIVISION_HALF_LENGTH : length,
   ]
+  return Array.from({ length: bounds.length / 2 }, (_, index) => ({
+    from: bounds[2 * index],
+    to: bounds[2 * index + 1],
+  }))
+}
+
+function innerJoints(columnJoints: number[], length: number) {
+  return columnJoints.filter((joint) => joint < length - LENGTH_TOLERANCE)
+}
+
+export function secondCorridorTiles(
+  first: CorridorToken[],
+  second: CorridorToken[],
+  turnedTiles: boolean,
+): Placement[] {
+  const length = lengthOf(second)
+  const columnJoints = secondColumnJoints(second)
+  const tiles = turnedTiles
+    ? diagonalFloorTiles(tileRuns(columnJoints, length), length)
+    : floorTiles(columnJoints, length)
+  return tiles.map((placement) => turned(placement, secondCorridorOrigin(first)))
+}
+
+export function secondCorridorTiledArea(
+  first: CorridorToken[],
+  second: CorridorToken[],
+): TiledArea {
+  const length = lengthOf(second)
+  const runs = tileRuns(secondColumnJoints(second), length)
+  return {
+    origin: secondCorridorOrigin(first),
+    from: runs[0].from,
+    to: runs[runs.length - 1].to,
+    halfAcross: HALF_TILED_WIDTH,
+    runs,
+    divisions: innerJoints(secondColumnJoints(second), length),
+    divisionHalfLength: DIVISION_HALF_LENGTH,
+  }
+}
+
+export function secondCorridorPoint(
+  first: CorridorToken[],
+  along: number,
+  across: number,
+): [x: number, z: number] {
+  const [originX, originZ] = secondCorridorOrigin(first)
+  return [originX - across, originZ + along]
+}
+
+export function secondCorridorSpot(
+  first: CorridorToken[],
+  x: number,
+  z: number,
+): [along: number, across: number] {
+  const [originX, originZ] = secondCorridorOrigin(first)
+  return [z - originZ, originX - x]
+}
+
+export const SECOND_CORRIDOR_HALF_WIDTH = SECOND_HALF_WIDTH
+
+export const FIRST_CORRIDOR_HALF_WIDTH = FIRST_HALF_WIDTH
+
+export const SECOND_CORRIDOR_ROOF_START = SECOND_ROOF_OFFSET
+
+function secondColumnJoints(second: CorridorToken[]) {
+  return columnJointsOf(second).filter((joint) => joint > LENGTH_TOLERANCE)
+}
+
+function diagonalFloorTiles(runs: TileRun[], length: number): Placement[] {
+  const yaw = TILE_QUARTER_TURN + TURNED_TILE_YAW
+  const across: [number, number] = [Math.cos(yaw) * TILE_WIDTH, -Math.sin(yaw) * TILE_WIDTH]
+  const along: [number, number] = [Math.sin(yaw) * TILE_ROW_LENGTH, Math.cos(yaw) * TILE_ROW_LENGTH]
+  const middle = length / 2
+  const reach = Math.hypot(middle, HALF_TILED_WIDTH) + TILE_REACH
+  const steps = Math.ceil(reach / Math.min(TILE_WIDTH, TILE_ROW_LENGTH))
   const placements: Placement[] = []
-  let firstRow = 0
-  for (let index = 0; index < bounds.length; index += 2) {
-    const rows = tileRows(bounds[index], bounds[index + 1], firstRow)
-    placements.push(...rows.placements)
-    firstRow += rows.count
+  for (let column = -steps; column <= steps; column++) {
+    for (let row = -steps; row <= steps; row++) {
+      const x = middle + column * across[0] + row * along[0]
+      const z = column * across[1] + row * along[1]
+      if (touchesRuns(runs, x, z)) placements.push(checkerTile(row, column, x, z, yaw))
+    }
   }
   return placements
+}
+
+function touchesRuns(runs: TileRun[], x: number, z: number) {
+  return (
+    Math.abs(z) < HALF_TILED_WIDTH + TILE_REACH &&
+    runs.some(({ from, to }) => x > from - TILE_REACH && x < to + TILE_REACH)
+  )
 }
 
 function tileRows(from: number, to: number, firstRow: number) {
@@ -332,20 +446,36 @@ function tileRows(from: number, to: number, firstRow: number) {
   const pitch = (to - from) / count
   const placements = Array.from({ length: count }, (_, row) =>
     Array.from({ length: TILES_ACROSS }, (_, column) =>
-      checkerTile(firstRow + row, column, from + (row + 0.5) * pitch),
+      checkerTile(
+        firstRow + row,
+        column,
+        from + (row + 0.5) * pitch,
+        (column - (TILES_ACROSS - 1) / 2) * TILE_WIDTH,
+        TILE_QUARTER_TURN,
+      ),
     ),
   ).flat()
   return { count, placements }
 }
 
-function checkerTile(row: number, column: number, along: number): Placement {
+function checkerTile(
+  row: number,
+  column: number,
+  along: number,
+  across: number,
+  yaw: number,
+): Placement {
   const flip = randomOf(row, column, FLIP_SEED) < 0.5 ? 0 : Math.PI
   return {
-    piece: (row + column) % 2 === 0 ? "floor_tile_1" : "floor_tile_2",
-    position: [along, 0, (column - (TILES_ACROSS - 1) / 2) * TILE_WIDTH],
-    rotationY: TILE_QUARTER_TURN + flip + jitter(row, column, YAW_SEED),
+    piece: isEven(row + column) ? "floor_tile_1" : "floor_tile_2",
+    position: [along, 0, across],
+    rotationY: yaw + flip + jitter(row, column, YAW_SEED),
     tilt: [jitter(row, column, TILT_X_SEED), jitter(row, column, TILT_Z_SEED)],
   }
+}
+
+function isEven(value: number) {
+  return ((value % 2) + 2) % 2 === 0
 }
 
 function jitter(row: number, column: number, seed: number) {

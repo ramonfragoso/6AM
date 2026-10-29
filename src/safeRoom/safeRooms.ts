@@ -71,14 +71,22 @@ export type RoomPart = {
   room: Room
   local: Matrix4
   farWall?: FarWall
+  holdsHouseDoor?: boolean
 }
+
+export type RoomShowing = { startRoomFarDoor: boolean; endRoomGone: boolean }
 
 export type FarWall = "door" | "full"
 
 export const ROOM_PARTS: RoomPart[] = ROOMS.flatMap((room): RoomPart[] => [
   { piece: "safe_room_half", room, local: IDENTITY },
   { piece: "safe_room_half", room, local: HALF_TURN },
-  { piece: "safe_room_doorway_wall", room, local: IDENTITY },
+  {
+    piece: "safe_room_doorway_wall",
+    room,
+    local: IDENTITY,
+    holdsHouseDoor: true,
+  },
   {
     piece: "safe_room_doorway_wall",
     room,
@@ -129,12 +137,17 @@ export function doorFrameMatrix(doorway: Doorway) {
   return roomMatrix(roomOfDoorway(doorway)).multiply(local)
 }
 
-export function shownWith(farWall: FarWall | undefined, startRoomFarDoor: boolean) {
+export function partShown(
+  { room, farWall, holdsHouseDoor }: RoomPart,
+  { startRoomFarDoor, endRoomGone }: RoomShowing,
+) {
+  if (room === "end" && endRoomGone && !holdsHouseDoor) return false
   if (!farWall) return true
   return (farWall === "door") === startRoomFarDoor
 }
 
-export function farDoorShown(doorway: Doorway, startRoomFarDoor: boolean) {
+export function farDoorShown(doorway: Doorway, { startRoomFarDoor, endRoomGone }: RoomShowing) {
+  if (doorway === "endFar") return !endRoomGone
   return doorway !== "startFar" || startRoomFarDoor
 }
 

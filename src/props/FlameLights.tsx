@@ -2,9 +2,10 @@ import { useHelper } from "@react-three/drei"
 import { useFrame } from "@react-three/fiber"
 import { levaStore } from "leva"
 import { type RefObject, useCallback, useEffect, useMemo, useRef } from "react"
-import { PointLight, PointLightHelper, type Vector3Tuple } from "three"
+import { Color, PointLight, PointLightHelper, type Vector3Tuple } from "three"
 import { useDebugMode } from "@/debug/useDebugMode"
-import { hauntState } from "@/haunts/hauntState"
+import { doorFlicker } from "@/doorWall/doorFlicker"
+import { hauntLight } from "@/haunts/hauntedLight"
 import { loopState } from "@/passage/loopState"
 import { type Flame, FLAME_GROUPS, type FlameGroup, type FlamesByGroup, flameSize } from "./flames"
 import type { FlameLightSettings, FlameSettings } from "./useFlamesTuning"
@@ -34,12 +35,24 @@ type FlameLightsProps = { flames: FlamesByGroup; settings: GroupSettings }
 
 type PointLights = RefObject<(PointLight | null)[]>
 
-export type LitFlame = { position: Vector3Tuple; light: FlameLightSettings; castShadow: boolean }
+export type LitFlame = {
+  position: Vector3Tuple
+  light: FlameLightSettings
+  castShadow: boolean
+  group?: FlameGroup
+}
 
 const staleShadowListeners = new Set<() => void>()
 
 export function refreshStaticShadows() {
   staleShadowListeners.forEach((refresh) => refresh())
+}
+
+export function listenForStaleShadows(refresh: () => void) {
+  staleShadowListeners.add(refresh)
+  return () => {
+    staleShadowListeners.delete(refresh)
+  }
 }
 
 export function flickerWave(time: number, phase: number) {
@@ -56,8 +69,9 @@ export function FlameLights({ flames, settings }: FlameLightsProps) {
 
 export function LitFlames({ lit }: { lit: LitFlame[] }) {
   const pointLights = useRef<(PointLight | null)[]>([])
+  const colors = useMemo(() => lit.map(({ light }) => new Color(light.color)), [lit])
   useStaticShadows(pointLights, lit)
-  useFrame(({ clock }) => waver(pointLights.current, lit, clock.elapsedTime))
+  useFrame(({ clock }) => waver(pointLights.current, lit, colors, clock.elapsedTime))
 
   return lit.map((flame, index) => (
     <FlameLight key={index} flame={flame} index={index} pointLights={pointLights} />
@@ -100,6 +114,7 @@ function litFlames(flames: FlamesByGroup, settings: GroupSettings): LitFlame[] {
       position: lightPosition(flame, settings[group]),
       light: settings[group].light,
       castShadow: true,
+      group,
     })),
   )
 }
@@ -115,21 +130,27 @@ function useStaticShadows(pointLights: PointLights, lit: LitFlame[]) {
       for (const light of pointLights.current) if (light) light.shadow.needsUpdate = true
     }
     refresh()
-    staleShadowListeners.add(refresh)
+    const stopListening = listenForStaleShadows(refresh)
     const unsubscribe = levaStore.useStore.subscribe(refresh)
     return () => {
-      staleShadowListeners.delete(refresh)
+      stopListening()
       unsubscribe()
     }
   }, [pointLights, lit])
 }
 
-function waver(pointLights: (PointLight | null)[], lit: LitFlame[], time: number) {
-  lit.forEach(({ light }, index) => {
+function waver(pointLights: (PointLight | null)[], lit: LitFlame[], colors: Color[], time: number) {
+  lit.forEach(({ light, group }, index) => {
     const pointLight = pointLights[index]
     if (!pointLight) return
     const wave = flickerWave(time, index * PHASE_PER_LIGHT)
-    pointLight.intensity =
-      light.intensity * (1 + light.flicker * wave) * loopState.houseLevel * hauntState.houseLight
+    const flicker = flickerOf(group, light)
+    const intensity = light.intensity * (1 + flicker * wave) * loopState.houseLevel
+    hauntLight(pointLight, intensity, colors[index])
   })
+}
+
+function flickerOf(group: FlameGroup | undefined, { flicker }: FlameLightSettings) {
+  if (group !== "tiledLantern") return flicker
+  return doorFlicker.lantern ?? flicker
 }

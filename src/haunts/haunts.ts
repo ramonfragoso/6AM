@@ -5,7 +5,12 @@ export const HAUNT_KINDS = ["loud", "subtle"] as const
 
 export type HauntKind = (typeof HAUNT_KINDS)[number]
 
-export type TriggerMoment = { eye: Vector3; yaw: number; sinceChosen: number }
+export type TriggerMoment = {
+  eye: Vector3
+  yaw: number
+  sinceChosen: number
+  steps: readonly Vector3[]
+}
 
 export type Trigger = (moment: TriggerMoment) => boolean
 

@@ -1,17 +1,17 @@
 import type { Haunt } from "./haunts"
 import { reachedCorner } from "./triggers"
 
-const MOCK_COUNT = 20
-
 const LOUD_MOCKS = 10
 
-export const MOCK_HAUNTS: readonly Haunt[] = Array.from({ length: MOCK_COUNT }, (_, index) =>
-  mockHaunt(index + 1),
-)
+const MOCK_ID_PREFIX = "haunt"
+
+export function mockHaunts(first: number, last: number): Haunt[] {
+  return Array.from({ length: last - first + 1 }, (_, index) => mockHaunt(first + index))
+}
 
 function mockHaunt(number: number): Haunt {
   return {
-    id: `haunt${number}`,
+    id: `${MOCK_ID_PREFIX}${number}`,
     name: `Haunt ${number}`,
     kind: number <= LOUD_MOCKS ? "loud" : "subtle",
     trigger: isEven(number) ? reachedCorner : undefined,
@@ -20,4 +20,8 @@ function mockHaunt(number: number): Haunt {
 
 function isEven(number: number) {
   return number % 2 === 0
+}
+
+export function isMockHaunt(haunt: Haunt) {
+  return haunt.id.startsWith(MOCK_ID_PREFIX)
 }

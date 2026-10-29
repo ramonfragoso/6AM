@@ -1,8 +1,15 @@
-import { type Material, Matrix4, type MeshStandardMaterial, type Vector3Tuple } from "three"
+import {
+  type Material,
+  Matrix4,
+  type MeshStandardMaterial,
+  type Object3D,
+  type Vector3Tuple,
+} from "three"
 import type { WallSide } from "@/kit/corridorLayout"
 import type { Placement } from "@/kit/kitPieces"
 import type { Kit } from "@/kit/useKit"
 import type { SurfaceTextures, TexturesFor } from "@/models/useSurfacedModel"
+import type { LeafPose } from "./doorRattle"
 
 export const DOOR_WALL_URL = "/models/wall_4m_door.glb"
 
@@ -20,7 +27,7 @@ const DOOR_TURN = Math.PI
 
 const LEAF_HINGE: Vector3Tuple = [0.7303, 0, 0.1089]
 
-const LEAF_THICKNESS = 0.2201
+export const LEAF_THICKNESS = 0.2201
 
 const FRONT_HINGE_OFFSET = new Matrix4().makeTranslation(0, 0, -LEAF_THICKNESS)
 
@@ -31,6 +38,26 @@ const BACK_HINGE = new Matrix4().makeTranslation(...LEAF_HINGE)
 const FRONT_HINGE = BACK_HINGE.clone().multiply(FRONT_HINGE_OFFSET)
 
 const leafTurn = new Matrix4()
+
+const leafShake = new Matrix4()
+
+const DOORWAY_MIDDLE_HEIGHT = 1.4
+
+const DOORWAY_WIDTH = 1.658
+
+const DOORWAY_HEIGHT = 2.968
+
+const DARKNESS_MARGIN = 0.15
+
+const DARKNESS_DEPTH = 1.8
+
+const DARKNESS_BELOW_FLOOR = 0.01
+
+export const DOORWAY_DARKNESS_SIZE: Vector3Tuple = [
+  DOORWAY_WIDTH + 2 * DARKNESS_MARGIN,
+  DOORWAY_HEIGHT + DARKNESS_MARGIN + DARKNESS_BELOW_FLOOR,
+  DARKNESS_DEPTH,
+]
 
 const DEGREES = Math.PI / 180
 
@@ -58,6 +85,34 @@ export function doorLeafMatrix(frame: Matrix4, openDegrees: number, target = new
   leafTurn.makeRotationY(openDegrees * DEGREES)
   if (openDegrees >= 0) return target.copy(frame).multiply(BACK_HINGE).multiply(leafTurn)
   return target.copy(frame).multiply(FRONT_HINGE).multiply(leafTurn).multiply(BACK_FROM_FRONT_HINGE)
+}
+
+export function shakenLeafMatrix(
+  frame: Matrix4,
+  openDegrees: number,
+  { angle, offset, tilt }: LeafPose,
+  target: Matrix4,
+) {
+  doorLeafMatrix(frame, openDegrees + angle, target)
+  leafShake.makeRotationX(tilt * DEGREES).setPosition(0, 0, offset)
+  return target.multiply(leafShake)
+}
+
+export function doorwayMiddle({ position: [x, , z] }: Placement): Vector3Tuple {
+  return [x, DOORWAY_MIDDLE_HEIGHT, z]
+}
+
+export function doorwayDarknessMatrix(frame: Matrix4) {
+  const [, height, depth] = DOORWAY_DARKNESS_SIZE
+  return frame
+    .clone()
+    .multiply(new Matrix4().makeTranslation(0, height / 2 - DARKNESS_BELOW_FLOOR, depth / 2))
+}
+
+export function castNoShadows(object: Object3D) {
+  object.traverse((part) => {
+    part.castShadow = false
+  })
 }
 
 export function framePartsOf(kit: Kit) {

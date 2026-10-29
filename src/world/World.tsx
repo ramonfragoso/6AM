@@ -4,6 +4,7 @@ import { Physics } from "@react-three/rapier"
 import { Leva } from "leva"
 import { Suspense, useRef, type RefObject } from "react"
 import type { Vector3Tuple } from "three"
+import { Ambience } from "@/ambience/Ambience"
 import { DEFAULT_FOV } from "@/camera/useCameraTuning"
 import { FieldOfView } from "@/camera/FieldOfView"
 import { Dawn } from "@/dawn/Dawn"
@@ -21,11 +22,12 @@ import { Player } from "@/player/Player"
 import { PostProcessing } from "@/postprocessing/PostProcessing"
 import { SoundSystem } from "@/sound/SoundSystem"
 import { useTuningPersistence } from "@/tuning/useTuningPersistence"
+import { VoidScreen } from "@/void/VoidScreen"
 import { Lights } from "./Lights"
 import { GRAVITY, PHYSICS_STEP_PRIORITY, PHYSICS_TIME_STEP } from "./physicsSettings"
 import { WebGPUCanvas } from "./WebGPUCanvas"
 
-const PIXEL_RATIO: [number, number] = [1, 2]
+const PIXEL_RATIO: [number, number] = [0.8, 0.8]
 
 const INITIAL_CAMERA_POSITION: Vector3Tuple = [0, 0, 0]
 
@@ -66,6 +68,7 @@ export function World() {
       <DebugPlayerCoordinates ref={debugPlayerCoordinates} />
       <Prompt ref={prompt} />
       <HauntOverlay />
+      <VoidScreen />
       <DawnScreen />
       <WebGPUCanvas
         dpr={PIXEL_RATIO}
@@ -105,6 +108,7 @@ function Scene({ debugPlayerCoordinates, prompt }: SceneProps) {
       <DebugPlayer coordinatesReadout={debugPlayerCoordinates} />
       <FieldOfView />
       <SoundSystem />
+      <Ambience />
       <Night />
       <Haunts />
       <Dawn />

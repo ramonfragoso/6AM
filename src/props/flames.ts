@@ -23,6 +23,10 @@ export type FlamesByGroup = Record<FlameGroup, Flame[]>
 
 export type PlacementsByGroup = Partial<Record<FlameGroup, Placement[]>>
 
+export type FireSoundGroup = FlameGroup | "candleSets"
+
+export type FireSoundSpot = { group: FireSoundGroup; at: Vector3 }
+
 export function flamesByGroup(
   kit: Kit,
   placements: Placement[],
@@ -42,6 +46,28 @@ export function flamesByGroup(
 function flamesOf(kit: Kit, placement: Placement, group: FlameGroup | undefined): Flame[] {
   if (!group) return []
   return flamePointsOf(kit, placement).map((point) => ({ group, ...point }))
+}
+
+export function fireSoundSpots(kit: Kit, placements: Placement[], tiledLantern: Placement) {
+  return [
+    ...placements.map((placement) =>
+      fireSoundSpot(kit, [placement], GROUP_OF_PIECE[placement.piece]),
+    ),
+    fireSoundSpot(kit, [tiledLantern], "tiledLantern"),
+  ].filter((spot) => spot !== null)
+}
+
+export function fireSoundSpot(
+  kit: Kit,
+  placements: Placement[],
+  group: FireSoundGroup | undefined,
+): FireSoundSpot | null {
+  const bases = placements.flatMap((placement) =>
+    flamePointsOf(kit, placement).map((point) => point.base),
+  )
+  if (!group || bases.length === 0) return null
+  const at = bases.reduce((sum, base) => sum.add(base), new Vector3()).divideScalar(bases.length)
+  return { group, at }
 }
 
 export function flamePointsOf(kit: Kit, placement: Placement): FlamePoint[] {
