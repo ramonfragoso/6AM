@@ -10,6 +10,7 @@ export type PlayOptions = {
   tone?: number
   delay?: number
   playedShare?: number
+  fadeIn?: number
 }
 
 export type PlayingSound = { stop: () => void }
@@ -31,6 +32,7 @@ export function startSound(
     tone = OPEN_TONE,
     delay = 0,
     playedShare = WHOLE,
+    fadeIn = 0,
   }: PlayOptions = {},
 ): PlayingSound | null {
   const engine = audioEngine()
@@ -52,6 +54,10 @@ export function startSound(
   }
   const startAt = context.currentTime + Math.max(delay, 0)
   const skipped = Math.max(-delay, 0) * playbackRate
+  if (fadeIn > 0) {
+    gain.gain.setValueAtTime(0, startAt)
+    gain.gain.linearRampToValueAtTime(level, startAt + fadeIn)
+  }
   source.start(startAt, skipped)
   if (playedShare < WHOLE) {
     const end = startAt + (buffer.duration * playedShare - skipped) / playbackRate

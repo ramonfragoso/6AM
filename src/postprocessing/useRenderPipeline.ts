@@ -1,7 +1,9 @@
 import { useFrame, useThree } from "@react-three/fiber"
+import { dawnScreenCover } from "@/dawn/dawnScreenCover"
 import { useEffect, useMemo } from "react"
 import type { PerspectiveCamera, WebGPURenderer } from "three/webgpu"
 import { hauntState } from "@/haunts/hauntState"
+import { drawsScene } from "@/loading/loading"
 import { cameraZoom, withFarFocus } from "@/zoom/zoom"
 import { createPostProcessing } from "./postProcessing"
 import { useBloomTuning } from "./useBloomTuning"
@@ -93,6 +95,7 @@ export function useRenderPipeline() {
   })
 
   useFrame((_, delta) => {
+    if (dawnScreenCover.coversScene || !drawsScene()) return
     postProcessing.fog.uniforms.time.value += delta * fogTuning.cloudSpeed
     postProcessing.depthOfField.bokehScale.value =
       depthOfFieldTuning.bokehScale * hauntState.depthOfField

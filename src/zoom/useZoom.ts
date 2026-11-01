@@ -4,6 +4,7 @@ import { useViewpoint } from "@/debugPlayer/useViewpoint"
 import { nightState } from "@/night/night"
 import { strangling } from "@/ghost/strangleView"
 import { loopState } from "@/passage/loopState"
+import { playing } from "@/title/title"
 import { preloadSounds } from "@/sound/audioEngine"
 import type { PlayingSound } from "@/sound/playSound"
 import { useZoomControls } from "./useZoomControls"
@@ -43,5 +44,5 @@ export function useZoom() {
 }
 
 export function playerHasControl() {
-  return !loopState.passing && !strangling() && nightState.phase === "playing"
+  return playing() && !loopState.passing && !strangling() && nightState.phase === "playing"
 }

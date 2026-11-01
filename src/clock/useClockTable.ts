@@ -1,10 +1,11 @@
 import type { RapierRigidBody } from "@react-three/rapier"
-import { useMemo, useRef } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import type { Group } from "three"
 import type { Kit } from "@/kit/useKit"
 import { furnishedPose } from "@/safeRoom/furnishedRoom"
 import { useFurnished } from "@/safeRoom/useFurnished"
 import { useFurnitureShadow } from "@/safeRoom/useFurnitureShadow"
+import { placedClock } from "./placedClock"
 import { clockOnTableMatrix, tableCollider, tableMatrix } from "./clock"
 import { useClockHands } from "./useClockHands"
 import { useClockModel } from "./useClockModel"
@@ -29,6 +30,12 @@ export function useClockTable(kit: Kit) {
   )
   const bodyPose = useMemo(() => furnishedPose(local), [local])
   useFurnished(table, body, local)
+  useEffect(() => {
+    placedClock.object = clock.current
+    return () => {
+      placedClock.object = null
+    }
+  }, [])
   useFurnitureShadow(model.shadowCasters)
   const handRefs = useClockHands(model.hands)
   useClockSounds(clock, useClockSoundTuning())

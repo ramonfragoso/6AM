@@ -114,8 +114,17 @@ export function endLoop(way: Way) {
     return
   }
   nightState.hour = passed ? nightState.hour + 1 : 0
-  showHour(nightState.hour)
+  if (passed) showHour(nightState.hour)
+  else setClockHour(nightState.hour)
   chooseLoop()
+}
+
+export function bringsDawn(way: Way) {
+  return (
+    nightState.phase === "playing" &&
+    nightState.hour === FINAL_HOUR &&
+    passes(nightState.loop.outcome, way)
+  )
 }
 
 export function manifestHaunt() {

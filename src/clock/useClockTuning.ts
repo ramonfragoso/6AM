@@ -3,7 +3,9 @@ import { slider } from "@/debug/slider"
 import type { FurnitureSpot } from "@/props/propPlacements"
 import { useTuningControls } from "@/tuning/useTuningControls"
 import { CLOCK_SPOT, CLOCK_TABLE_SPOT } from "./clock"
+import { clockDialGlow, clockHandSurface, DIAL_GLOW, HAND_LOOK } from "./clockSurface"
 import { clockTime, setMinuteStart } from "./clockTime"
+import { handMotionSettings } from "./handMotion"
 
 const STEP = 0.001
 
@@ -46,6 +48,8 @@ export function useClockTuning() {
     },
   })
   useTimeControls()
+  useHandControls()
+  useDialControls()
   return { table, clock }
 }
 
@@ -94,6 +98,98 @@ function useTimeControls() {
   useEffect(() => {
     clockTime.rate = rate
   }, [rate])
+}
+
+function useHandControls() {
+  const {
+    color,
+    roughness,
+    metalness,
+    tickSeconds,
+    overshoot,
+    glitchSeconds,
+    resetSeconds,
+    hourSeconds,
+  } = useTuningControls(
+    "Clock.Hands",
+    {
+      color: {
+        value: HAND_LOOK.color,
+        hint: "Color of the three Hands, in place of their texture",
+      },
+      roughness: fineSlider(HAND_LOOK.roughness, 0, 1, "0 is a mirror shine, 1 fully matte"),
+      metalness: fineSlider(HAND_LOOK.metalness, 0, 1, "0 is painted, 1 bare metal"),
+      tickSeconds: fineSlider(
+        handMotionSettings.tickSeconds,
+        0,
+        0.9,
+        "Seconds a Hand takes to move one mark when it ticks (and the minute Hand's jump)",
+      ),
+      overshoot: fineSlider(
+        handMotionSettings.overshoot,
+        0,
+        4,
+        "How far a ticking Hand swings past its mark before settling back; 0 stops dead",
+      ),
+      glitchSeconds: fineSlider(
+        handMotionSettings.glitchSeconds,
+        0,
+        0.3,
+        "Seconds each Glitch step takes; longer than the gap between steps blurs them together",
+      ),
+      resetSeconds: fineSlider(
+        handMotionSettings.resetSeconds,
+        0,
+        3,
+        "Seconds the Hands take to sweep back to the stuck minute after the Glitch or a restart",
+      ),
+      hourSeconds: fineSlider(
+        handMotionSettings.hourSeconds,
+        0,
+        6,
+        "Seconds the hour Hand takes to sweep to a new Hour",
+      ),
+    },
+    { collapsed: true },
+  )
+
+  useEffect(() => {
+    clockHandSurface.color.value.set(color)
+    clockHandSurface.roughness.value = roughness
+    clockHandSurface.metalness.value = metalness
+  }, [color, roughness, metalness])
+  useEffect(() => {
+    Object.assign(handMotionSettings, {
+      tickSeconds,
+      overshoot,
+      glitchSeconds,
+      resetSeconds,
+      hourSeconds,
+    })
+  }, [tickSeconds, overshoot, glitchSeconds, resetSeconds, hourSeconds])
+}
+
+function useDialControls() {
+  const { color, glow, printed } = useTuningControls(
+    "Clock.Dial",
+    {
+      color: { value: DIAL_GLOW.color, hint: "Color of the light the dial gives off" },
+      glow: fineSlider(DIAL_GLOW.glow, 0, 5, "How bright the dial glows on its own; 0 is unlit"),
+      printed: fineSlider(
+        DIAL_GLOW.printed,
+        0,
+        1,
+        "1 glows only through the dial's pale paper, so the numbers stay dark; 0 glows evenly",
+      ),
+    },
+    { collapsed: true },
+  )
+
+  useEffect(() => {
+    clockDialGlow.color.value.set(color)
+    clockDialGlow.glow.value = glow
+    clockDialGlow.printed.value = printed
+  }, [color, glow, printed])
 }
 
 function fineSlider(value: number, min: number, max: number, hint: string) {

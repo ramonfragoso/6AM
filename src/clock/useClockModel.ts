@@ -5,6 +5,7 @@ import { type Kit, type PieceModel, pieceModelsOf } from "@/kit/useKit"
 import { useModel } from "@/models/useModel"
 import { shadeFromLamp } from "@/safeRoom/lampShadow"
 import { ROOM_SURFACE } from "@/safeRoom/useSafeRoomModel"
+import { clockSurfaceOverrides, lightUpDial } from "./clockSurface"
 import { CLOCK_PIECES, CLOCK_URL, HAND_ANCHORS, HAND_PIECES, type Hand, HANDS } from "./clock"
 
 export type ClockHand = { anchor: Matrix4; meshes: Mesh[] }
@@ -21,7 +22,12 @@ export function useClockModel(kit: Kit): ClockModel {
   const { scene } = useModel(CLOCK_URL)
   const texturesFor = useMemo(() => kitTexturesOf(kit), [kit])
   return useMemo(() => {
-    const pieces = pieceModelsOf(scene, CLOCK_PIECES, { ...ROOM_SURFACE, texturesFor })
+    const pieces = pieceModelsOf(scene, CLOCK_PIECES, {
+      ...ROOM_SURFACE,
+      texturesFor,
+      overrides: clockSurfaceOverrides,
+    })
+    lightUpDial(pieces.clock.parts)
     for (const { parts } of Object.values(pieces)) {
       for (const { material } of parts) shadeFromLamp(material, null)
     }

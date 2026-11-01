@@ -1,3 +1,4 @@
+import { downloadedBody } from "@/loading/downloads"
 import { BUSES, type Bus, SOUNDS, type SoundName } from "./sounds"
 
 export type AudioEngine = {
@@ -5,6 +6,7 @@ export type AudioEngine = {
   fader: GainNode
   master: GainNode
   buses: Record<Bus, GainNode>
+  busFaders: Record<Bus, GainNode>
 }
 
 export type Volumes = Record<"master" | Bus, number>
@@ -19,6 +21,12 @@ const volumes: Volumes = {
 }
 
 let fadedLevel = 1
+
+const busFadedLevels: Record<Bus, number> = {
+  effects: 1,
+  ambience: 1,
+  music: 1,
+}
 
 const fetched = new Map<SoundName, Promise<ArrayBuffer | null>>()
 
@@ -43,12 +51,14 @@ export function setVolumes(next: Volumes) {
 
 export function fadeAllSound(level: number, seconds: number) {
   fadedLevel = level
-  if (!engine) return
-  const { context, fader } = engine
-  const now = context.currentTime
-  fader.gain.cancelScheduledValues(now)
-  fader.gain.setValueAtTime(fader.gain.value, now)
-  fader.gain.linearRampToValueAtTime(level, now + seconds)
+  if (engine) rampGain(engine.context, engine.fader, level, seconds)
+}
+
+export function fadeBuses(faded: readonly Bus[], level: number, seconds: number) {
+  for (const bus of faded) {
+    busFadedLevels[bus] = level
+    if (engine) rampGain(engine.context, engine.busFaders[bus], level, seconds)
+  }
 }
 
 export function preloadSounds(names: readonly SoundName[]) {
@@ -69,10 +79,17 @@ function createEngine(): AudioEngine {
   fader.connect(context.destination)
   const master = context.createGain()
   master.connect(fader)
+  const busFaders = Object.fromEntries(
+    BUSES.map((bus) => {
+      const busFader = new GainNode(context, { gain: busFadedLevels[bus] })
+      busFader.connect(master)
+      return [bus, busFader]
+    }),
+  ) as Record<Bus, GainNode>
   const buses = Object.fromEntries(
     BUSES.map((bus) => {
       const gain = context.createGain()
-      gain.connect(master)
+      gain.connect(busFaders[bus])
       return [bus, gain]
     }),
   ) as Record<Bus, GainNode>
@@ -81,9 +98,17 @@ function createEngine(): AudioEngine {
     fader,
     master,
     buses,
+    busFaders,
   }
   applyVolumes(created)
   return created
+}
+
+function rampGain(context: AudioContext, gain: GainNode, level: number, seconds: number) {
+  const now = context.currentTime
+  gain.gain.cancelScheduledValues(now)
+  gain.gain.setValueAtTime(gain.gain.value, now)
+  gain.gain.linearRampToValueAtTime(level, now + seconds)
 }
 
 function applyVolumes({ master, buses }: AudioEngine) {
@@ -92,6 +117,8 @@ function applyVolumes({ master, buses }: AudioEngine) {
 }
 
 async function fetchSound(name: SoundName) {
+  const downloaded = await downloadedBody(SOUNDS[name].url)
+  if (downloaded) return downloaded
   try {
     const response = await fetch(SOUNDS[name].url)
     if (!response.ok) throw new Error(`${response.status}`)

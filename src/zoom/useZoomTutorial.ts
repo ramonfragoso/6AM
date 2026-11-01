@@ -4,6 +4,7 @@ import { useViewpoint } from "@/debugPlayer/useViewpoint"
 import { readGamepad } from "@/input/gamepad"
 import { useLastInputDevice } from "@/input/useLastInputDevice"
 import { nightState } from "@/night/night"
+import { loopState } from "@/passage/loopState"
 import { playerHasControl } from "./useZoom"
 import { useZoomTutorialTuning } from "./useZoomTutorialTuning"
 import { cameraZoom } from "./zoom"
@@ -21,7 +22,7 @@ export function useZoomTutorial(copy: RefObject<HTMLElement | null>) {
     const element = copy.current
     if (!element) return
     const moment = {
-      teaching: viewed && inFirstLoop() && playerHasControl(),
+      teaching: viewed && inFirstCorridors() && playerHasControl(),
       progress: cameraZoom.progress,
       time: clock.elapsedTime,
       delta,
@@ -34,6 +35,6 @@ export function useZoomTutorial(copy: RefObject<HTMLElement | null>) {
   })
 }
 
-function inFirstLoop() {
-  return nightState.loops.length === 0
+function inFirstCorridors() {
+  return nightState.loops.length === 0 && loopState.whereabouts === "house"
 }

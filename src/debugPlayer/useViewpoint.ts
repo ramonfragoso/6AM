@@ -1,3 +1,4 @@
+import { IN_DEVELOPMENT } from "@/debug/development"
 import { useTuningControls } from "@/tuning/useTuningControls"
 
 export const VIEWPOINTS = ["Player", "DebugPlayer"] as const
@@ -8,7 +9,7 @@ const VIEWPOINT_SELECT = { value: VIEWPOINTS[0] as Viewpoint, options: VIEWPOINT
 
 export function useViewpoint(): Viewpoint {
   const { viewpoint } = useTuningControls("Debug", { viewpoint: VIEWPOINT_SELECT })
-  return isViewpoint(viewpoint) ? viewpoint : VIEWPOINTS[0]
+  return IN_DEVELOPMENT && isViewpoint(viewpoint) ? viewpoint : VIEWPOINTS[0]
 }
 
 function isViewpoint(value: unknown): value is Viewpoint {

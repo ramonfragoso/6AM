@@ -1,14 +1,13 @@
-"use client"
-
 import { Physics } from "@react-three/rapier"
 import { Leva } from "leva"
-import { Suspense, useRef, type RefObject } from "react"
+import { useRef, type RefObject } from "react"
 import type { Vector3Tuple } from "three"
 import { Ambience } from "@/ambience/Ambience"
 import { DEFAULT_FOV } from "@/camera/useCameraTuning"
 import { FieldOfView } from "@/camera/FieldOfView"
 import { Dawn } from "@/dawn/Dawn"
 import { DawnScreen } from "@/dawn/DawnScreen"
+import { IN_DEVELOPMENT } from "@/debug/development"
 import { GpuTime } from "@/debug/GpuTime"
 import { useDebugMode } from "@/debug/useDebugMode"
 import { DebugPlayer } from "@/debugPlayer/DebugPlayer"
@@ -24,7 +23,10 @@ import { PostProcessing } from "@/postprocessing/PostProcessing"
 import { SoundSystem } from "@/sound/SoundSystem"
 import { useTuningPersistence } from "@/tuning/useTuningPersistence"
 import { BlackoutScreen } from "@/blackout/BlackoutScreen"
+import { TitleScreen } from "@/title/TitleScreen"
 import { ZoomTutorial } from "@/zoom/ZoomTutorial"
+import { LoadingBoundary } from "@/loading/LoadingBoundary"
+import { WarmUp } from "@/loading/WarmUp"
 import { Lights } from "./Lights"
 import { GRAVITY, PHYSICS_STEP_PRIORITY, PHYSICS_TIME_STEP } from "./physicsSettings"
 import { WebGPUCanvas } from "./WebGPUCanvas"
@@ -43,8 +45,6 @@ const INITIAL_CAMERA = {
 const BACKGROUND_COLOR = "#000000"
 
 const SOFT_SHADOWS = "percentage"
-
-const TUNING_PANEL_HIDDEN = process.env.NODE_ENV !== "development"
 
 const TUNING_PANEL_THEME = { sizes: { numberInputMinWidth: "48px" } }
 
@@ -67,14 +67,15 @@ export function World() {
   return (
     <main className="h-screen w-full">
       <div className="fixed top-1 right-1 z-50 max-h-[calc(100vh-0.5rem)] max-w-[370px] overflow-x-hidden overflow-y-auto overscroll-contain rounded-md">
-        <Leva fill hidden={TUNING_PANEL_HIDDEN} theme={TUNING_PANEL_THEME} />
+        <Leva fill hidden={!IN_DEVELOPMENT} theme={TUNING_PANEL_THEME} />
       </div>
       <DebugPlayerCoordinates ref={debugPlayerCoordinates} />
       <Prompt ref={prompt} />
       <ZoomTutorial ref={zoomTutorial} />
-      <HauntOverlay />
+      {IN_DEVELOPMENT && <HauntOverlay />}
       <BlackoutScreen />
       <DawnScreen />
+      <TitleScreen />
       <WebGPUCanvas
         dpr={PIXEL_RATIO}
         camera={INITIAL_CAMERA}
@@ -84,13 +85,13 @@ export function World() {
         fallback={<NoGraphicsMessage />}
       >
         <color attach="background" args={[BACKGROUND_COLOR]} />
-        <Suspense fallback={null}>
+        <LoadingBoundary>
           <Scene
             debugPlayerCoordinates={debugPlayerCoordinates}
             prompt={prompt}
             zoomTutorial={zoomTutorial}
           />
-        </Suspense>
+        </LoadingBoundary>
       </WebGPUCanvas>
     </main>
   )
@@ -122,6 +123,7 @@ function Scene({ debugPlayerCoordinates, prompt, zoomTutorial }: SceneProps) {
       <Haunts />
       <Dawn />
       <PostProcessing />
+      <WarmUp />
       <GpuTime />
     </>
   )

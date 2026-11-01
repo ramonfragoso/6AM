@@ -1,3 +1,14 @@
-export type DawnTiming = { fadeOut: number; buttonDelay: number; fadeIn: number }
+import { type CreditsTiming, ENDING_MUSIC_CUES } from "./credits"
 
-export const dawnTiming: DawnTiming = { fadeOut: 3, buttonDelay: 0.5, fadeIn: 2 }
+export type DawnTiming = CreditsTiming & { fadeOut: number; fadeIn: number }
+
+export const dawnTiming: DawnTiming = {
+  fadeOut: 3,
+  fadeIn: 2,
+  musicDelay: 4,
+  musicFadeIn: 3,
+  settle: 6,
+  rollStart: ENDING_MUSIC_CUES.secondHeavy,
+  rollCentered: ENDING_MUSIC_CUES.lastClean,
+  buttonDelay: 0.5,
+}

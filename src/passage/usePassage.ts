@@ -2,15 +2,19 @@ import { type RapierRigidBody, useAfterPhysicsStep } from "@react-three/rapier"
 import { type RefObject, useCallback, useEffect, useMemo, useRef } from "react"
 import { type Euler, MathUtils, Vector3 } from "three"
 import { strangling } from "@/ghost/strangleView"
-import { endLoop, nightState } from "@/night/night"
+import { dawnLight, fillWithDawnLight } from "@/dawn/dawnLight"
+import { dawnLightSettings } from "@/dawn/dawnLightSettings"
+import { bringsDawn, endLoop, nightState } from "@/night/night"
 import { type NightEvent, nightEvents } from "@/night/nightEvents"
 import { playerPose } from "@/player/playerPose"
+import { playing } from "@/title/title"
 import { opensOntoVoid } from "@/void/voidOpen"
 import { type Way, wakesInStartRoom } from "@/night/loops"
 import {
   type Doorway,
   DOORWAYS,
   doorFrameMatrix,
+  otherRoom,
   type Room,
   roomAxes,
   roomOfDoorway,
@@ -46,6 +50,7 @@ type Passage = DoorChoice &
     route: PassageRoute
     shape: PassageShape
     startedAt: number
+    dawnWay: Way | null
   }
 
 type DoorTarget = DoorChoice & { center: Vector3; heading: Vector3; awayFromHinge: Vector3 }
@@ -102,6 +107,8 @@ export function usePassage(rig: PlayerRig, prompt: RefObject<HTMLElement | null>
   const begin = useCallback(
     (door: DoorTarget, time: number) => {
       const room = roomOfDoorway(door.doorway)
+      const way = WAY_THROUGH[door.doorway]
+      const dawnWay = door.entering && way && bringsDawn(way) ? way : null
       const from = {
         eye: playerPose.eye.clone(),
         yaw: rig.view.current.y,
@@ -120,8 +127,12 @@ export function usePassage(rig: PlayerRig, prompt: RefObject<HTMLElement | null>
         shape: passageShape(tuning.lineUp, tuning.through, tuning),
         startedAt: time,
         doorSounded: false,
+        dawnWay,
       }
-      if (door.entering) loopState.lampRoom = room
+      if (dawnWay) {
+        fillWithDawnLight(door.doorway)
+        loopState.lampRoom = otherRoom(room)
+      } else if (door.entering) loopState.lampRoom = room
       loopState.passing = true
       rig.body.current?.setEnabled(false)
     },
@@ -129,7 +140,7 @@ export function usePassage(rig: PlayerRig, prompt: RefObject<HTMLElement | null>
   )
 
   const drive = useCallback(
-    (running: Passage, progress: number) => {
+    (running: Passage, progress: number, duration: number) => {
       const { pose, opened, closed } = passageMoment(
         running.route,
         running.shape,
@@ -137,17 +148,27 @@ export function usePassage(rig: PlayerRig, prompt: RefObject<HTMLElement | null>
         progress,
       )
       const swing = running.entering ? OPENS_INTO_ROOM : OPENS_OUT_OF_ROOM
-      loopState.leafAngles[running.doorway] = swing * tuning.openAngle * opened * (1 - closed)
-      loopState.lampLevel = running.entering ? opened : 1 - closed
-      loopState.houseLevel = running.entering ? 1 - closed : opened
+      const shut = running.dawnWay ? 0 : closed
+      loopState.leafAngles[running.doorway] = swing * tuning.openAngle * opened * (1 - shut)
+      if (running.dawnWay) dawnLight.opened = opened
+      else {
+        loopState.lampLevel = running.entering ? opened : 1 - closed
+        loopState.houseLevel = running.entering ? 1 - closed : opened
+      }
       heldPose.current = pose
-      soundDoor(running, progress, tuning.duration, tuning.timing)
+      soundDoor(running, progress, duration, tuning.timing)
     },
     [tuning, soundDoor],
   )
 
   const finish = useCallback(
     (running: Passage, pose: Pose) => {
+      if (running.dawnWay) {
+        passage.current = null
+        loopState.passing = false
+        endLoop(running.dawnWay)
+        return
+      }
       loopState.leafAngles[running.doorway] = 0
       const arrived = running.entering ? wrapped(pose, running.room) : pose
       Object.assign(loopState, arrivalState(running.entering))
@@ -187,7 +208,7 @@ export function usePassage(rig: PlayerRig, prompt: RefObject<HTMLElement | null>
   const update = useCallback(
     (time: number, delta: number) => {
       const { open } = readControls()
-      if (nightState.phase === "dawn") {
+      if (nightState.phase === "dawn" || !playing()) {
         fadePrompt(HIDDEN, delta)
         return true
       }
@@ -197,8 +218,9 @@ export function usePassage(rig: PlayerRig, prompt: RefObject<HTMLElement | null>
       }
       const running = passage.current
       if (running) {
-        const progress = Math.min((time - running.startedAt) / tuning.duration, 1)
-        drive(running, progress)
+        const duration = running.dawnWay ? dawnLightSettings.passageSeconds : tuning.duration
+        const progress = Math.min((time - running.startedAt) / duration, 1)
+        drive(running, progress, duration)
         if (progress >= 1) finish(running, heldPose.current!)
         fadePrompt(HIDDEN, delta)
         return true

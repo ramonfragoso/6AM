@@ -74,7 +74,11 @@ export type RoomPart = {
   holdsHouseDoor?: boolean
 }
 
-export type RoomShowing = { startRoomFarDoor: boolean; endRoomGone: boolean }
+export type RoomShowing = {
+  startRoomFarDoor: boolean
+  endRoomGone: boolean
+  lightFilled: Room | null
+}
 
 export type FarWall = "door" | "full"
 
@@ -139,16 +143,25 @@ export function doorFrameMatrix(doorway: Doorway) {
 
 export function partShown(
   { room, farWall, holdsHouseDoor }: RoomPart,
-  { startRoomFarDoor, endRoomGone }: RoomShowing,
+  { startRoomFarDoor, endRoomGone, lightFilled }: RoomShowing,
 ) {
   if (room === "end" && endRoomGone && !holdsHouseDoor) return false
+  if (room === lightFilled && !holdsHouseDoor) return false
   if (!farWall) return true
   return (farWall === "door") === startRoomFarDoor
 }
 
-export function farDoorShown(doorway: Doorway, { startRoomFarDoor, endRoomGone }: RoomShowing) {
+export function farDoorShown(
+  doorway: Doorway,
+  { startRoomFarDoor, endRoomGone, lightFilled }: RoomShowing,
+) {
+  if (FAR_DOORWAYS.has(doorway) && roomOfDoorway(doorway) === lightFilled) return false
   if (doorway === "endFar") return !endRoomGone
   return doorway !== "startFar" || startRoomFarDoor
+}
+
+export function otherRoom(room: Room): Room {
+  return room === "start" ? "end" : "start"
 }
 
 export function roomAxes(room: Room) {

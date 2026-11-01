@@ -1,6 +1,7 @@
 import { useFrame } from "@react-three/fiber"
 import { useMemo } from "react"
 import type { PieceModel } from "@/kit/useKit"
+import { lightFilledRoom } from "@/dawn/dawnLight"
 import { loopState } from "@/passage/loopState"
 import { voidOpen } from "@/void/voidOpen"
 import { disposeInstances, instancesOf, type PartInstances, placeInstance } from "./partInstances"
@@ -70,11 +71,15 @@ export function useExteriors(exterior: Record<ExteriorPiece, PieceModel>) {
 }
 
 export function roomShowing(): RoomShowing {
-  return { startRoomFarDoor: loopState.startRoomFarDoor, endRoomGone: voidOpen() }
+  return {
+    startRoomFarDoor: loopState.startRoomFarDoor,
+    endRoomGone: voidOpen(),
+    lightFilled: lightFilledRoom(),
+  }
 }
 
-function showingKey({ startRoomFarDoor, endRoomGone }: RoomShowing) {
-  return `${startRoomFarDoor} ${endRoomGone}`
+function showingKey({ startRoomFarDoor, endRoomGone, lightFilled }: RoomShowing) {
+  return `${startRoomFarDoor} ${endRoomGone} ${lightFilled}`
 }
 
 function disposeShell({ instances }: Shell) {

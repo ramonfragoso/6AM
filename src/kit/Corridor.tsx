@@ -1,8 +1,8 @@
 import { RigidBody } from "@react-three/rapier"
-import { Suspense } from "react"
 import { CandleSets } from "@/candles/CandleSets"
 import { ClockTable } from "@/clock/ClockTable"
 import { Cockroaches } from "@/cockroaches/Cockroaches"
+import { DawnLight } from "@/dawn/DawnLight"
 import { DoorWall, DoorWallLight } from "@/doorWall/DoorWall"
 import { DOOR_WALL_INDEX, DOOR_WALL_SIDE, withoutPlacement } from "@/doorWall/doorWall"
 import { Ghost } from "@/ghost/Ghost"
@@ -23,6 +23,7 @@ import { Underfloor } from "./Underfloor"
 import { useKit } from "./useKit"
 import { useKitSurfaceTuning } from "./useKitSurfaceTuning"
 import { useKitUrl } from "./useKitUrl"
+import { LoadingBoundary } from "@/loading/LoadingBoundary"
 
 const HOUSE = houseLayout(FIRST_CORRIDOR, SECOND_CORRIDOR)
 
@@ -52,13 +53,14 @@ export function Corridor() {
       <CandleSets kit={kit} />
       <LampLight />
       <DoorWallLight wall={DOOR_WALL} />
-      <Suspense fallback={null}>
+      <DawnLight />
+      <LoadingBoundary>
         <SafeRooms kit={kit} />
         <ClockTable kit={kit} />
         <DoorWall kit={kit} wall={DOOR_WALL} />
         <Ghost />
         <Cockroaches kit={kit} />
-      </Suspense>
+      </LoadingBoundary>
       <RigidBody key={url} type="fixed" colliders={false}>
         <KitColliders kit={kit} placements={HOUSE} />
       </RigidBody>

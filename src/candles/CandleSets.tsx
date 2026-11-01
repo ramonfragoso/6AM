@@ -1,4 +1,4 @@
-import { Suspense, useMemo } from "react"
+import { useMemo } from "react"
 import { CANDLE_SET_PIECES } from "@/kit/kitPieces"
 import { KitInstances } from "@/kit/KitInstances"
 import { usePlacedPieces } from "@/kit/placedPieces"
@@ -11,6 +11,7 @@ import { furniturePlacement } from "@/props/propPlacements"
 import type { FireSettings } from "@/props/useFlamesTuning"
 import { candleSetLights } from "./candleSets"
 import { useCandleSetsTuning } from "./useCandleSetsTuning"
+import { LoadingBoundary } from "@/loading/LoadingBoundary"
 
 export function CandleSets({ kit }: { kit: Kit }) {
   const { spots, flame } = useCandleSetsTuning()
@@ -34,9 +35,9 @@ export function CandleSets({ kit }: { kit: Kit }) {
       <KitInstances kit={kit} placements={placements} />
       <LitFlames lit={lights} />
       <FireSounds spots={sounds} />
-      <Suspense fallback={null}>
+      <LoadingBoundary>
         <CandleSetFires flames={flames} settings={flame.fire} />
-      </Suspense>
+      </LoadingBoundary>
     </>
   )
 }

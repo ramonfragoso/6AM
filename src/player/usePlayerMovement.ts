@@ -8,6 +8,7 @@ import { useViewpoint } from "@/debugPlayer/useViewpoint"
 import { strangleView } from "@/ghost/strangleView"
 import { usePassage } from "@/passage/usePassage"
 import { emitStep } from "@/steps/stepEvents"
+import { useTitleCamera } from "@/title/useTitleCamera"
 import { READ_INPUT_PRIORITY } from "@/world/physicsSettings"
 import { playerPose } from "./playerPose"
 import { STANDING_STILL, usePlayerControls, type PlayerControls } from "./usePlayerControls"
@@ -18,6 +19,8 @@ import { createView, turnView } from "./view"
 const UP = new Vector3(0, 1, 0)
 
 const STILL: CameraOffset = { position: new Vector3(), pitch: 0, roll: 0 }
+
+const standingEye = new Vector3()
 
 export function usePlayerMovement(spawnYaw: number, prompt: RefObject<HTMLElement | null>) {
   const body = useRef<RapierRigidBody>(null)
@@ -30,6 +33,7 @@ export function usePlayerMovement(spawnYaw: number, prompt: RefObject<HTMLElemen
   const passage = usePassage({ body, view, eyeHeight }, prompt, viewed)
   const gaitOf = useGait(body)
   const advanceCameraMotion = useCameraMotion(emitStep)
+  const titleCamera = useTitleCamera()
 
   useFrame(({ clock }, delta) => {
     const read = readControls(delta)
@@ -41,20 +45,16 @@ export function usePlayerMovement(spawnYaw: number, prompt: RefObject<HTMLElemen
 
   useFrame((_, delta) => {
     const strangled = strangleView.pose
-    const held = strangled ?? passage.cameraPose()
-    if (held) playerPose.eye.copy(held.eye)
-    else eye.current.getWorldPosition(playerPose.eye)
+    eye.current.getWorldPosition(standingEye)
+    const titled = titleCamera({ eye: standingEye, yaw: view.current.y, pitch: view.current.x })
+    const still = strangled ?? titled
+    const held = still ?? passage.cameraPose()
+    playerPose.eye.copy(held ? held.eye : standingEye)
     playerPose.yaw = held ? held.yaw : view.current.y
     playerPose.pitch = held ? held.pitch : view.current.x
     const offset = advanceCameraMotion(gaitOf(delta, playerPose.eye, !held))
     if (!viewed) return
-    placeCamera(
-      camera,
-      playerPose.eye,
-      playerPose.pitch,
-      playerPose.yaw,
-      strangled ? STILL : offset,
-    )
+    placeCamera(camera, playerPose.eye, playerPose.pitch, playerPose.yaw, still ? STILL : offset)
   })
 
   return {

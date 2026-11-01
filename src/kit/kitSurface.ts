@@ -69,10 +69,17 @@ type SurfaceInputs = {
   roughness: Node<"float">
 }
 
+export type SurfaceOverrides = {
+  color?: Node<"vec3">
+  roughness?: Node<"float">
+  metalness?: Node<"float">
+}
+
 export type SurfaceOptions = {
   worldVariation?: boolean
   occlusionStrength?: Node<"float">
   grimeStrength?: Node<"float">
+  overrides?: (source: Material) => SurfaceOverrides | null
 }
 
 export function kitSurfaceMaterial(
@@ -81,6 +88,7 @@ export function kitSurfaceMaterial(
     worldVariation = true,
     occlusionStrength = kitSurface.occlusion,
     grimeStrength = kitSurface.grime,
+    overrides,
   }: SurfaceOptions = {},
 ): Material {
   const surface = source.isMeshPhysicalMaterial
@@ -102,6 +110,11 @@ export function kitSurfaceMaterial(
     inputs.roughness = candleWax.roughness
     surface.metalnessNode = candleWax.metalness
   }
+
+  const overridden = overrides?.(source)
+  if (overridden?.color) inputs.color = overridden.color
+  if (overridden?.roughness) inputs.roughness = overridden.roughness
+  if (overridden?.metalness) surface.metalnessNode = overridden.metalness
 
   const baked = texture(occlusionMap)
   const occlusion = mix(float(1), baked.r, occlusionStrength)

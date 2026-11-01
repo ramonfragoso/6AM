@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react"
+import { IN_DEVELOPMENT } from "@/debug/development"
 import { slider } from "@/debug/slider"
 import { setEnabledRules, setHauntOdds } from "@/night/night"
 import { useTuningControls } from "@/tuning/useTuningControls"
@@ -35,7 +36,7 @@ export function useHauntsTuning() {
   const enabledKey = enabled.join()
   useEffect(() => setEnabledRules(enabledKey ? enabledKey.split(",") : []), [enabledKey])
   useEffect(() => {
-    hauntOverlayToggle.shown = haunts
+    hauntOverlayToggle.shown = IN_DEVELOPMENT && haunts
   }, [haunts])
 }
 

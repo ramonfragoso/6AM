@@ -1,4 +1,3 @@
-import { Suspense } from "react"
 import type { CorridorToken } from "@/kit/corridorSpec"
 import { KitInstances } from "@/kit/KitInstances"
 import type { Kit } from "@/kit/useKit"
@@ -6,6 +5,7 @@ import type { HungPainting } from "./paintings"
 import { usePaintedCanvases } from "./usePaintedCanvases"
 import { useHungPaintings } from "./useHungPaintings"
 import type { GlassSettings } from "./usePaintingsTuning"
+import { LoadingBoundary } from "@/loading/LoadingBoundary"
 
 type PaintingsProps = {
   kit: Kit
@@ -19,9 +19,9 @@ export function Paintings({ kit, first, version }: PaintingsProps) {
   return (
     <>
       <KitInstances kit={kit} placements={frames} />
-      <Suspense fallback={null}>
+      <LoadingBoundary>
         <PaintedCanvases kit={kit} hung={hung} version={version} glass={glass} />
-      </Suspense>
+      </LoadingBoundary>
     </>
   )
 }

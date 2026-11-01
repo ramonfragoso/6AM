@@ -54,7 +54,7 @@ export function HauntOverlay() {
               onClick={() => force(cell.id)}
               className={`${CELL} ${STATUS_CLASSES[cell.status]} ${cell.current ? "outline-2 outline-amber-300" : ""}`}
             >
-              {cell.label}
+              {cell.name}
             </button>
           ))}
           <span className="ml-1 text-white/60">{row.refills}</span>

@@ -10,7 +10,6 @@ import {
   TILED_FLOOR_ROTATION,
 } from "./houseHaunts"
 import { LIGHTS_OUT } from "./lightsOut"
-import { mockHaunts } from "./mockHaunts"
 import { OPEN_DOOR } from "./openDoor"
 import {
   GROWING_PAINTINGS,
@@ -36,15 +35,10 @@ export const HAUNTS: readonly Haunt[] = [
   HORIZONTAL_PAINTINGS,
   TILED_FLOOR_ROTATION,
   GROWING_PAINTINGS,
-  ...mockHaunts(16, 20),
 ]
 
 export function hauntById(id: string) {
   return HAUNTS.find((haunt) => haunt.id === id) ?? null
-}
-
-export function hauntNumber(haunt: Haunt) {
-  return HAUNTS.indexOf(haunt) + 1
 }
 
 export function hauntsOfKind(kind: HauntKind) {

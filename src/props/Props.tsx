@@ -1,5 +1,5 @@
 import { RigidBody } from "@react-three/rapier"
-import { Suspense, useMemo } from "react"
+import { useMemo } from "react"
 import { Vector3 } from "three"
 import type { CorridorToken } from "@/kit/corridorSpec"
 import { KitColliders } from "@/kit/KitColliders"
@@ -25,6 +25,7 @@ import {
 } from "./propPlacements"
 import { useFlamesTuning } from "./useFlamesTuning"
 import { usePropsTuning } from "./usePropsTuning"
+import { LoadingBoundary } from "@/loading/LoadingBoundary"
 
 type PropsProps = { kit: Kit; first: CorridorToken[]; second: CorridorToken[] }
 
@@ -73,15 +74,15 @@ export function Props({ kit, first, second }: PropsProps) {
         </RigidBody>
       ))}
       <MovingChair kit={kit} spot={chair} />
-      <Suspense fallback={null}>
+      <LoadingBoundary>
         <CoatRack spot={coatRack} />
-      </Suspense>
+      </LoadingBoundary>
       <Clutter kit={kit} obstacles={clutterObstacles} />
       <FlameLights flames={flames} settings={flameSettings} />
       <FireSounds spots={fireSounds} />
-      <Suspense fallback={null}>
+      <LoadingBoundary>
         <Fires flames={flames} settings={flameSettings} />
-      </Suspense>
+      </LoadingBoundary>
     </>
   )
 }

@@ -1,17 +1,15 @@
 import { FINAL_HOUR, loopForcedOnce, type NightState } from "@/night/night"
 import { LOOP_OUTCOMES, type LoopOutcome, type LoopRecord } from "@/night/loops"
 import { loopState } from "@/passage/loopState"
-import { hauntById, hauntNumber, hauntsOfKind } from "./allHaunts"
+import { hauntById, hauntsOfKind } from "./allHaunts"
 import type { OutcomeWeights } from "./hauntRules"
 import { HAUNT_KINDS, type HauntKind } from "./haunts"
-import { isMockHaunt } from "./mockHaunts"
 import { type HauntStanding, isRefilled, isSeenOnce } from "./pool"
 
 export type HauntStatus = "unseen" | "caught" | "missed" | "refilled"
 
 export type HauntCell = {
   id: string
-  label: string
   name: string
   status: HauntStatus
   current: boolean
@@ -98,7 +96,6 @@ function kindRow(kind: HauntKind, night: NightState): KindRow {
     refills: kindRule(kind, night.refills[kind]),
     cells: hauntsOfKind(kind).map((haunt) => ({
       id: haunt.id,
-      label: isMockHaunt(haunt) ? String(hauntNumber(haunt)) : haunt.name,
       name: haunt.name,
       status: statusOf(night.standings[haunt.id]),
       current: night.loop.haunt?.id === haunt.id,
