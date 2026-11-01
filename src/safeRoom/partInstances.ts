@@ -7,17 +7,14 @@ import {
   type MeshStandardMaterial,
   type Object3D,
 } from "three"
+import { switchToDerivativeTangents, withoutTangents } from "@/kit/derivativeTangents"
 import type { PiecePart } from "@/kit/useKit"
 
 export type PartInstances = { part: PiecePart; mesh: InstancedMesh }
 
 const HIDDEN = new Matrix4().makeScale(0, 0, 0)
 
-const TANGENT = "tangent"
-
 const placed = new Matrix4()
-
-const onDerivativeTangents = new WeakSet<Material>()
 
 export function instancesOf(parts: PiecePart[], count: number): PartInstances[] {
   return parts.map((part) => {
@@ -40,19 +37,6 @@ export function disposeInstances(instances: PartInstances[]) {
 export function placeInstance({ part, mesh }: PartInstances, index: number, at: Matrix4 | null) {
   mesh.setMatrixAt(index, at ? placed.multiplyMatrices(at, part.matrix) : HIDDEN)
   mesh.instanceMatrix.needsUpdate = true
-}
-
-function switchToDerivativeTangents(material: Material) {
-  const { normalScale } = material as MeshStandardMaterial
-  if (!normalScale || onDerivativeTangents.has(material)) return
-  ;(material as MeshStandardMaterial).normalScale = normalScale.clone().setY(-normalScale.y)
-  onDerivativeTangents.add(material)
-}
-
-function withoutTangents(geometry: BufferGeometry) {
-  const copy = geometry.clone()
-  copy.deleteAttribute(TANGENT)
-  return copy
 }
 
 export function meshPartsOf(root: Object3D): PiecePart[] {

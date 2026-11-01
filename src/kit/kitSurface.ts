@@ -4,6 +4,7 @@ import {
   hash,
   instanceIndex,
   materialColor,
+  materialReference,
   materialRoughness,
   mix,
   mx_noise_float,
@@ -19,6 +20,8 @@ import {
 import { MeshPhysicalNodeMaterial, MeshStandardNodeMaterial, type Node } from "three/webgpu"
 
 const NO_DIVISION = -1e4
+
+const surfaceNormalScale = materialReference("normalScale", "vec2")
 
 export const kitSurface = {
   occlusion: uniform(1),
@@ -130,7 +133,7 @@ function randomizedTileInputs(
     surface.metalnessNode = texture(source.metalnessMap, tileUv).b.mul(source.metalness)
   }
   if (source.normalMap) {
-    surface.normalNode = normalMap(texture(source.normalMap, tileUv), uniform(source.normalScale))
+    surface.normalNode = normalMap(texture(source.normalMap, tileUv), surfaceNormalScale)
   }
   if (source.emissiveMap) {
     surface.emissiveNode = texture(source.emissiveMap, tileUv)

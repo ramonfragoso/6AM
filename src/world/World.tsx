@@ -9,6 +9,7 @@ import { DEFAULT_FOV } from "@/camera/useCameraTuning"
 import { FieldOfView } from "@/camera/FieldOfView"
 import { Dawn } from "@/dawn/Dawn"
 import { DawnScreen } from "@/dawn/DawnScreen"
+import { GpuTime } from "@/debug/GpuTime"
 import { useDebugMode } from "@/debug/useDebugMode"
 import { DebugPlayer } from "@/debugPlayer/DebugPlayer"
 import { DebugPlayerCoordinates } from "@/debugPlayer/DebugPlayerCoordinates"
@@ -22,12 +23,13 @@ import { Player } from "@/player/Player"
 import { PostProcessing } from "@/postprocessing/PostProcessing"
 import { SoundSystem } from "@/sound/SoundSystem"
 import { useTuningPersistence } from "@/tuning/useTuningPersistence"
-import { VoidScreen } from "@/void/VoidScreen"
+import { BlackoutScreen } from "@/blackout/BlackoutScreen"
+import { ZoomTutorial } from "@/zoom/ZoomTutorial"
 import { Lights } from "./Lights"
 import { GRAVITY, PHYSICS_STEP_PRIORITY, PHYSICS_TIME_STEP } from "./physicsSettings"
 import { WebGPUCanvas } from "./WebGPUCanvas"
 
-const PIXEL_RATIO: [number, number] = [0.8, 0.8]
+const PIXEL_RATIO: [number, number] = [1, 2]
 
 const INITIAL_CAMERA_POSITION: Vector3Tuple = [0, 0, 0]
 
@@ -54,11 +56,13 @@ const NO_GRAPHICS_MESSAGE =
 type SceneProps = {
   debugPlayerCoordinates: RefObject<HTMLOutputElement | null>
   prompt: RefObject<HTMLParagraphElement | null>
+  zoomTutorial: RefObject<HTMLDivElement | null>
 }
 
 export function World() {
   const debugPlayerCoordinates = useRef<HTMLOutputElement>(null)
   const prompt = useRef<HTMLParagraphElement>(null)
+  const zoomTutorial = useRef<HTMLDivElement>(null)
 
   return (
     <main className="h-screen w-full">
@@ -67,8 +71,9 @@ export function World() {
       </div>
       <DebugPlayerCoordinates ref={debugPlayerCoordinates} />
       <Prompt ref={prompt} />
+      <ZoomTutorial ref={zoomTutorial} />
       <HauntOverlay />
-      <VoidScreen />
+      <BlackoutScreen />
       <DawnScreen />
       <WebGPUCanvas
         dpr={PIXEL_RATIO}
@@ -80,14 +85,18 @@ export function World() {
       >
         <color attach="background" args={[BACKGROUND_COLOR]} />
         <Suspense fallback={null}>
-          <Scene debugPlayerCoordinates={debugPlayerCoordinates} prompt={prompt} />
+          <Scene
+            debugPlayerCoordinates={debugPlayerCoordinates}
+            prompt={prompt}
+            zoomTutorial={zoomTutorial}
+          />
         </Suspense>
       </WebGPUCanvas>
     </main>
   )
 }
 
-function Scene({ debugPlayerCoordinates, prompt }: SceneProps) {
+function Scene({ debugPlayerCoordinates, prompt, zoomTutorial }: SceneProps) {
   useTuningPersistence()
   const debugMode = useDebugMode()
 
@@ -102,7 +111,7 @@ function Scene({ debugPlayerCoordinates, prompt }: SceneProps) {
         updatePriority={PHYSICS_STEP_PRIORITY}
       >
         <Corridor />
-        <Player prompt={prompt} />
+        <Player prompt={prompt} zoomTutorial={zoomTutorial} />
       </Physics>
       <Dust />
       <DebugPlayer coordinatesReadout={debugPlayerCoordinates} />
@@ -113,6 +122,7 @@ function Scene({ debugPlayerCoordinates, prompt }: SceneProps) {
       <Haunts />
       <Dawn />
       <PostProcessing />
+      <GpuTime />
     </>
   )
 }

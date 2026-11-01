@@ -1,6 +1,6 @@
 import type { Ref } from "react"
 
-const PROMPT_TEXT = "Press E"
+const PROMPT_TEXT = "PRESS e"
 
 type PromptProps = { ref: Ref<HTMLParagraphElement> }
 

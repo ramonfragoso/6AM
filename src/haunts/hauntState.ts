@@ -27,6 +27,10 @@ export type HauntState = {
   voidDoor: VoidDoor | null
   ghostAttack: GhostAttack | null
   cockroaches: Cockroaches | null
+  depthOfField: number
+  bloom: number
+  chromaticAberration: number
+  vignette: number
 }
 
 export const NO_PAINTING_SWAPS: readonly PaintingSwap[] = []
@@ -50,6 +54,10 @@ export const CLEAN_HAUNT_STATE: Readonly<HauntState> = {
   voidDoor: null,
   ghostAttack: null,
   cockroaches: null,
+  depthOfField: 1,
+  bloom: 1,
+  chromaticAberration: 1,
+  vignette: 1,
 }
 
 export const hauntState: HauntState = { ...CLEAN_HAUNT_STATE }

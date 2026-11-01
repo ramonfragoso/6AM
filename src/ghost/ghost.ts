@@ -16,6 +16,8 @@ export const IDLE_CLIP = "idle"
 
 export const WALK_CLIP = "walk"
 
+export const STRANGLE_CLIP = "strangle"
+
 export const WALK_CLIP_SPEED = 1.42
 
 const DEGREES = Math.PI / 180

@@ -12,11 +12,17 @@ export type PlayOptions = {
   playedShare?: number
 }
 
+export type PlayingSound = { stop: () => void }
+
 const TAIL_FADE = 0.03
 
 const WHOLE = 1
 
-export function playSound(
+export function playSound(name: SoundName, options: PlayOptions = {}) {
+  return startSound(name, options) !== null
+}
+
+export function startSound(
   name: SoundName,
   {
     from = null,
@@ -26,10 +32,10 @@ export function playSound(
     delay = 0,
     playedShare = WHOLE,
   }: PlayOptions = {},
-) {
+): PlayingSound | null {
   const engine = audioEngine()
   const buffer = bufferOf(name)
-  if (!engine || !buffer) return false
+  if (!engine || !buffer) return null
   const { context, buses } = engine
   const playbackRate = rateOf(pitch)
   const source = new AudioBufferSourceNode(context, { buffer, playbackRate })
@@ -53,5 +59,13 @@ export function playSound(
     gain.gain.linearRampToValueAtTime(0, end)
     source.stop(end)
   }
-  return true
+  return { stop: () => fadeOutNow(context, source, gain) }
+}
+
+function fadeOutNow(context: AudioContext, source: AudioBufferSourceNode, gain: GainNode) {
+  const now = context.currentTime
+  gain.gain.cancelScheduledValues(now)
+  gain.gain.setValueAtTime(gain.gain.value, now)
+  gain.gain.linearRampToValueAtTime(0, now + TAIL_FADE)
+  source.stop(now + TAIL_FADE)
 }

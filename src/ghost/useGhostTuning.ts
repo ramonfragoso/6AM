@@ -74,7 +74,7 @@ export function useGhostTuning() {
         0.1,
         2,
         STEP,
-        "Meters from the Player at which the Ghost vanishes",
+        "Meters from the Player at which the Ghost Strangles them",
       ),
       speed: slider(0.9, 0, 4, STEP, "Meters per second the Ghost walks toward the Player"),
       walkClipSpeed: slider(
@@ -92,13 +92,100 @@ export function useGhostTuning() {
         "How fast the Ghost turns toward the Player (per second); it only walks forward, slower the further it must turn",
       ),
       blendSeconds: slider(0.8, 0, 3, STEP, "Seconds the sad idle takes to blend into the walk"),
-      fadeSeconds: slider(
-        0.5,
-        0.05,
-        3,
+    },
+    COLLAPSED,
+  )
+  const strangle = useTuningControls(
+    "Haunts.Ghost Attack.Strangle",
+    {
+      grabBlend: slider(0.2, 0, 1, STEP, "Seconds the walk takes to blend into the strangle"),
+      grabSeconds: slider(
+        0.25,
+        0,
+        2,
         STEP,
-        "Seconds the Ghost takes to fade out once it reaches the Player",
+        "Seconds the camera takes to move from the Player's eye into the Ghost's hands",
       ),
+      up: slider(
+        0.2,
+        -0.3,
+        0.6,
+        0.005,
+        "Meters the camera sits above the middle of the Ghost's hands, as a head above the neck they hold",
+      ),
+      back: slider(
+        0.05,
+        -0.3,
+        0.5,
+        0.005,
+        "Meters the camera sits back from the Ghost's hands, away from it, so its forearms show at the bottom",
+      ),
+      lookAt: slider(
+        0.45,
+        0,
+        1,
+        STEP,
+        "Where the camera looks on the Ghost's head: 0 the base of the skull, 1 its crown (about 0.45 is the eyes)",
+      ),
+      lookSmoothing: slider(
+        0.05,
+        0,
+        0.5,
+        0.005,
+        "Seconds the view lags behind the Ghost's face; 0 follows every shake exactly",
+      ),
+      holdSeconds: slider(
+        3,
+        0.5,
+        12,
+        STEP,
+        "Seconds the Ghost Strangles the Player before everything goes black (the 4 s clip loops)",
+      ),
+      fadeOut: slider(
+        0.1,
+        0,
+        2,
+        STEP,
+        "Seconds the picture takes to go black; every Sound cuts out at once",
+      ),
+      blackSeconds: slider(0.5, 0, 5, STEP, "Seconds of black before the Player wakes"),
+      fadeIn: slider(
+        1.5,
+        0.1,
+        5,
+        STEP,
+        "Seconds the Start Room and every Sound take to fade back in",
+      ),
+    },
+    COLLAPSED,
+  )
+  const shake = useTuningControls(
+    "Haunts.Ghost Attack.Shake",
+    {
+      shakeRate: slider(
+        20,
+        1,
+        60,
+        0.5,
+        "New random shake offsets per second for the torso, neck and head, eased between",
+      ),
+      headAngle: slider(
+        3,
+        0,
+        20,
+        0.1,
+        "Degrees each of the neck and head shakes at most (on top of every animation)",
+      ),
+      torsoShare: slider(
+        0.3,
+        0,
+        1,
+        STEP,
+        "Share of headAngle each of the three spine bones shakes; they add up toward the head",
+      ),
+      jerkEvery: slider(3, 0.5, 20, 0.1, "Average seconds between sudden head jerks (at random)"),
+      jerkAngle: slider(12, 0, 45, 0.5, "Degrees of a sudden head jerk; 0 turns them off"),
+      jerkSeconds: slider(0.3, 0.05, 2, STEP, "Seconds a head jerk takes to settle back"),
     },
     COLLAPSED,
   )
@@ -146,10 +233,10 @@ export function useGhostTuning() {
       wake: volumeSlider(1, "Violin stinger when the Ghost starts walking"),
       loop: volumeSlider(
         0.4,
-        "Scream looping from the Ghost while it walks, until it has faded out",
+        "Scream looping from the Ghost while it walks and Strangles, until the picture goes black",
       ),
       loopFadeIn: slider(0.3, 0, 3, STEP, "Seconds the loop takes to fade in"),
-      vanish: volumeSlider(1, "Second violin stinger when the Ghost vanishes"),
+      strangle: volumeSlider(1, "Second violin stinger when the Ghost Strangles the Player"),
       muffle: muffleSlider(0, "Muffles every Ghost Attack sound"),
       ...emitterSliders(LOOP_EMITTER),
     },
@@ -167,17 +254,24 @@ export function useGhostTuning() {
   }, [look])
 
   const settings = useMemo(() => ({ ...attack }), [attack])
+  const strangleSettings = useMemo(() => ({ ...strangle }), [strangle])
+  const shakeSettings = useMemo(() => ({ ...shake }), [shake])
   const soundSettings = useMemo(
     () => ({
       sighting: sound.sighting,
       wake: sound.wake,
       loop: sound.loop,
       loopFadeIn: sound.loopFadeIn,
-      vanish: sound.vanish,
+      strangle: sound.strangle,
       tone: toneOf(sound.muffle),
       shape: emitterShapeOf(sound),
     }),
     [sound],
   )
-  return { settings, sound: soundSettings }
+  return {
+    settings,
+    strangle: strangleSettings,
+    shake: shakeSettings,
+    sound: soundSettings,
+  }
 }

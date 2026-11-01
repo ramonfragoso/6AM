@@ -3,3 +3,32 @@
 body {
   background: #000;
 }
+
+@theme {
+  --animate-click: click 0.9s ease-out infinite;
+  --animate-click-rays: click-rays 0.9s ease-out infinite;
+
+  @keyframes click {
+    0%,
+    45%,
+    100% {
+      transform: scale(1);
+    }
+    12% {
+      transform: scale(0.78);
+    }
+  }
+
+  @keyframes click-rays {
+    0%,
+    100% {
+      opacity: 0.15;
+    }
+    15% {
+      opacity: 1;
+    }
+    55% {
+      opacity: 0.15;
+    }
+  }
+}

@@ -10,6 +10,7 @@ import {
 } from "three"
 import { disposeMaterial, releaseModel, useModel } from "@/models/useModel"
 import type { TexturesFor } from "@/models/useSurfacedModel"
+import { dropTangents, switchToDerivativeTangents } from "./derivativeTangents"
 import { KIT_NODE_PREFIX, KIT_PIECES, type KitPiece } from "./kitPieces"
 import { kitSurfaceMaterial, type SurfaceOptions } from "./kitSurface"
 
@@ -102,9 +103,12 @@ function pieceModelOf(
     }
     if (!(object instanceof Mesh)) return
     const matrix = toRoot.clone().multiply(object.matrixWorld)
+    const material = surfaceOf(object.material, surfaces, surfacing)
+    dropTangents(object.geometry)
+    switchToDerivativeTangents(material)
     parts.push({
       geometry: object.geometry,
-      material: surfaceOf(object.material, surfaces, surfacing),
+      material,
       source: object.material,
       matrix,
       canvas: (object.material as Material).name.startsWith(CANVAS_MATERIAL_PREFIX),

@@ -1,26 +1,19 @@
 import { useFrame } from "@react-three/fiber"
 import { useEffect, useRef } from "react"
+import { advanceBlackout, type Blackout, startBlackout } from "@/blackout/blackout"
 import { endLoop, nightState } from "@/night/night"
 import { nightClock } from "@/night/nightClock"
 import { nightEvents } from "@/night/nightEvents"
 import { loopState } from "@/passage/loopState"
 import { playerPose } from "@/player/playerPose"
-import { fadeAllSound } from "@/sound/audioEngine"
 import { FURNISH_PRIORITY } from "@/world/physicsSettings"
-import { voidEvents } from "./voidEvents"
 import { voidOpen } from "./voidOpen"
 import { voidSettings } from "./voidSettings"
 
-type Fall = { since: number; faded: boolean }
-
 const FLOOR_LEVEL = 0
 
-const SILENT = 0
-
-const FULL_VOLUME = 1
-
 export function useVoidFall() {
-  const fall = useRef<Fall | null>(null)
+  const fall = useRef<Blackout | null>(null)
 
   useEffect(
     () =>
@@ -32,23 +25,21 @@ export function useVoidFall() {
 
   useFrame(() => {
     const now = nightClock()
-    const falling = fall.current
-    if (!falling) {
-      if (startsFalling()) fall.current = { since: now, faded: false }
+    if (!fall.current) {
+      if (startsFalling()) fall.current = startBlackout(now)
       return
     }
     const { fallSeconds, fadeOut, blackSeconds, fadeIn } = voidSettings
-    const seconds = now - falling.since
-    if (!falling.faded && seconds >= fallSeconds) {
-      falling.faded = true
-      fadeAllSound(SILENT, fadeOut)
-      voidEvents.emit({ kind: "fadeOut", seconds: fadeOut })
+    const timing = {
+      before: fallSeconds,
+      fadeOut,
+      soundOut: fadeOut,
+      black: blackSeconds,
+      fadeIn,
     }
-    if (seconds < fallSeconds + fadeOut + blackSeconds) return
+    if (!advanceBlackout(fall.current, now, timing)) return
     fall.current = null
     endLoop("down")
-    fadeAllSound(FULL_VOLUME, fadeIn)
-    voidEvents.emit({ kind: "fadeIn", seconds: fadeIn })
   }, FURNISH_PRIORITY)
 }
 

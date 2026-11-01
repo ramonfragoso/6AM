@@ -2,8 +2,10 @@ import { useFrame, useThree } from "@react-three/fiber"
 import type { RapierRigidBody } from "@react-three/rapier"
 import { type RefObject, useRef } from "react"
 import { Object3D, Vector3 } from "three"
+import type { CameraOffset } from "@/camera/cameraMotion"
 import { placeCamera, useCameraMotion } from "@/camera/useCameraMotion"
 import { useViewpoint } from "@/debugPlayer/useViewpoint"
+import { strangleView } from "@/ghost/strangleView"
 import { usePassage } from "@/passage/usePassage"
 import { emitStep } from "@/steps/stepEvents"
 import { READ_INPUT_PRIORITY } from "@/world/physicsSettings"
@@ -14,6 +16,8 @@ import { usePlayerTuning } from "./usePlayerTuning"
 import { createView, turnView } from "./view"
 
 const UP = new Vector3(0, 1, 0)
+
+const STILL: CameraOffset = { position: new Vector3(), pitch: 0, roll: 0 }
 
 export function usePlayerMovement(spawnYaw: number, prompt: RefObject<HTMLElement | null>) {
   const body = useRef<RapierRigidBody>(null)
@@ -36,14 +40,21 @@ export function usePlayerMovement(spawnYaw: number, prompt: RefObject<HTMLElemen
   }, READ_INPUT_PRIORITY)
 
   useFrame((_, delta) => {
-    const held = passage.cameraPose()
+    const strangled = strangleView.pose
+    const held = strangled ?? passage.cameraPose()
     if (held) playerPose.eye.copy(held.eye)
     else eye.current.getWorldPosition(playerPose.eye)
     playerPose.yaw = held ? held.yaw : view.current.y
+    playerPose.pitch = held ? held.pitch : view.current.x
     const offset = advanceCameraMotion(gaitOf(delta, playerPose.eye, !held))
     if (!viewed) return
-    const pitch = held ? held.pitch : view.current.x
-    placeCamera(camera, playerPose.eye, pitch, playerPose.yaw, offset)
+    placeCamera(
+      camera,
+      playerPose.eye,
+      playerPose.pitch,
+      playerPose.yaw,
+      strangled ? STILL : offset,
+    )
   })
 
   return {

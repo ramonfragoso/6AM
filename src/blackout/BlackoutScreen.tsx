@@ -1,7 +1,7 @@
-import { useVoidScreen } from "./useVoidScreen"
+import { useBlackoutScreen } from "./useBlackoutScreen"
 
-export function VoidScreen() {
-  const { covered, seconds } = useVoidScreen()
+export function BlackoutScreen() {
+  const { covered, seconds } = useBlackoutScreen()
 
   return (
     <div

@@ -9,7 +9,7 @@ in the game. The body's material (a flat skin image mixed with cyan, plus a
 procedural bump) becomes its flat color, since glTF has no Mix node; the eyes
 keep their color; the two decals keep their images, scaled to powers of two
 because WebGPU needs compressed textures in whole 4 px blocks. The clips are the
-rig's NLA tracks (`idle`, `walk`), sampled at the scene's 60 fps.
+rig's NLA tracks (`idle`, `walk`, `strangle`), sampled at the scene's 60 fps.
 """
 
 import json
@@ -22,7 +22,6 @@ import numpy as np
 from mathutils import Matrix
 
 RIG = "ghost_rig"
-MESH = "ghost"
 CLIP_FPS = 60
 MATERIAL_NAMES = ["ghost_body", "ghost_eyes", "ghost_decal_1", "ghost_decal_2"]
 DECAL_SIZE_LIMIT = 512
@@ -33,7 +32,7 @@ def main(options):
     scene.render.fps = CLIP_FPS
     scene.render.fps_base = 1
     rig = bpy.data.objects[RIG]
-    mesh = bpy.data.objects[MESH]
+    mesh = next(child for child in rig.children if child.type == "MESH")
     rig.matrix_world = Matrix.Identity(4)
     rig.animation_data.action = None
     rig.data.pose_position = "POSE"

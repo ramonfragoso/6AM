@@ -1,7 +1,7 @@
-"""Rig the ghost with the Mixamo skeleton and bake its two clips.
+"""Rig the ghost with the Mixamo skeleton and bake its clips.
 
 Run inside Blender (Text Editor, or headless with --python), with the ghost mesh
-in the open file:
+(the unparented mesh with the eye_bsd material) in the open file:
 
     blender house_interior.blend --background --python tools/kit/blender/rig_ghost.py -- \
         '{"save": "<rigged.blend>"}'
@@ -12,7 +12,7 @@ pose (arms aimed through the mesh's elbows and wrists), applies that as the rest
 pose, skins the mesh with automatic weights (on the body only; the eyes and the
 decals take the nearest body weights), and bakes each clip onto it by copying
 every bone's world rotation and location from the imported skeleton. The result
-is the "ghost" collection: `ghost_rig` (armature, NLA tracks `idle` and `walk`)
+is the "ghost" collection: `ghost_rig` (armature, NLA tracks `idle`, `walk` and `strangle`)
 and `ghost` (the skinned mesh). The original mesh is hidden, never changed.
 """
 
@@ -26,14 +26,18 @@ import bpy
 import numpy as np
 from mathutils import Matrix, Vector
 
-SOURCE_MESH = "Male body reference"
+SOURCE_MATERIAL = "eye_bsd"
 COLLECTION = "ghost"
 RIG = "ghost_rig"
 MESH = "ghost"
 BODY_MATERIAL = 0
 BONE_PREFIX = "mixamorig:"
 DOWNLOADS = Path.home() / "Downloads"
-CLIPS = {"idle": DOWNLOADS / "Sad Idle.fbx", "walk": DOWNLOADS / "Walking.fbx"}
+CLIPS = {
+    "idle": DOWNLOADS / "Sad Idle.fbx",
+    "walk": DOWNLOADS / "Walking.fbx",
+    "strangle": DOWNLOADS / "strangle.fbx",
+}
 CLIP_FPS = 60
 MAX_INFLUENCES = 4
 RING_WIDTH = 0.015
@@ -44,8 +48,8 @@ PLANTED_HEIGHT = 0.005
 
 def main(options):
     scene = bpy.context.scene
-    source = bpy.data.objects[SOURCE_MESH]
     remove_previous()
+    source = source_mesh()
     collection = bpy.data.collections.new(COLLECTION)
     scene.collection.children.link(collection)
 
@@ -72,6 +76,17 @@ def main(options):
     source.hide_render = True
     if options.get("save"):
         bpy.ops.wm.save_as_mainfile(filepath=options["save"], copy=True)
+
+
+def source_mesh():
+    for obj in bpy.data.objects:
+        if obj.type == "MESH" and not obj.parent and has_material(obj, SOURCE_MATERIAL):
+            return obj
+    raise LookupError(f"No unrigged mesh with the {SOURCE_MATERIAL} material")
+
+
+def has_material(obj, name):
+    return any(material and material.name == name for material in obj.data.materials)
 
 
 def remove_previous():

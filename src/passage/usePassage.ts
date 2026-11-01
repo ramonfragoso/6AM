@@ -1,11 +1,12 @@
 import { type RapierRigidBody, useAfterPhysicsStep } from "@react-three/rapier"
 import { type RefObject, useCallback, useEffect, useMemo, useRef } from "react"
 import { type Euler, MathUtils, Vector3 } from "three"
+import { strangling } from "@/ghost/strangleView"
 import { endLoop, nightState } from "@/night/night"
 import { type NightEvent, nightEvents } from "@/night/nightEvents"
 import { playerPose } from "@/player/playerPose"
 import { opensOntoVoid } from "@/void/voidOpen"
-import type { Way } from "@/night/loops"
+import { type Way, wakesInStartRoom } from "@/night/loops"
 import {
   type Doorway,
   DOORWAYS,
@@ -78,6 +79,7 @@ export function usePassage(rig: PlayerRig, prompt: RefObject<HTMLElement | null>
   const passage = useRef<Passage | null>(null)
   const heldPose = useRef<Pose | null>(null)
   const releaseAfterStep = useRef(false)
+  const strangledBody = useRef(false)
   const promptShown = useRef(HIDDEN)
 
   useAfterPhysicsStep(() => {
@@ -177,7 +179,7 @@ export function usePassage(rig: PlayerRig, prompt: RefObject<HTMLElement | null>
   useEffect(
     () =>
       nightEvents.listen((event) => {
-        if (event.kind === "newNight" || fellIntoVoid(event)) respawn()
+        if (event.kind === "newNight" || wokeInStartRoom(event)) respawn()
       }),
     [respawn],
   )
@@ -186,6 +188,10 @@ export function usePassage(rig: PlayerRig, prompt: RefObject<HTMLElement | null>
     (time: number, delta: number) => {
       const { open } = readControls()
       if (nightState.phase === "dawn") {
+        fadePrompt(HIDDEN, delta)
+        return true
+      }
+      if (holdStrangledBody(rig, strangledBody)) {
         fadePrompt(HIDDEN, delta)
         return true
       }
@@ -256,8 +262,15 @@ function reachableDoor(
   )
 }
 
-function fellIntoVoid(event: NightEvent) {
-  return event.kind === "verdict" && event.way === "down"
+function wokeInStartRoom(event: NightEvent) {
+  return event.kind === "verdict" && wakesInStartRoom(event.way)
+}
+
+function holdStrangledBody(rig: PlayerRig, strangledBody: RefObject<boolean>) {
+  const held = strangling()
+  if (held !== strangledBody.current) rig.body.current?.setEnabled(!held)
+  strangledBody.current = held
+  return held
 }
 
 function placeBody(rig: PlayerRig, pose: Pose) {

@@ -24,9 +24,12 @@ export type GamepadButton =
   | "dpadLeft"
   | "dpadRight"
 
+export type GamepadFamily = "xbox" | "playstation"
+
 export type Stick = { x: number; y: number }
 
 export type GamepadState = {
+  family: GamepadFamily | null
   leftStick: Stick
   rightStick: Stick
   leftTrigger: number
@@ -62,6 +65,10 @@ const BUTTON_INDEX: Record<GamepadButton, number> = {
   dpadRight: 15,
 }
 
+const GAMEPAD_BUTTONS = Object.keys(BUTTON_INDEX) as GamepadButton[]
+
+const PLAYSTATION_ID = /054c|playstation|dualsense|dualshock|sony/i
+
 const STANDARD_LAYOUT: GamepadLayout = {
   leftStick: { x: 0, y: 1 },
   rightStick: { x: 2, y: 3 },
@@ -79,6 +86,7 @@ const UNMAPPED_LAYOUT: GamepadLayout = {
 const CENTERED: Stick = { x: 0, y: 0 }
 
 const DISCONNECTED: GamepadState = {
+  family: null,
   leftStick: CENTERED,
   rightStick: CENTERED,
   leftTrigger: 0,
@@ -92,12 +100,23 @@ export function readGamepad(): GamepadState {
 
   const layout = layoutOf(gamepad)
   return {
+    family: PLAYSTATION_ID.test(gamepad.id) ? "playstation" : "xbox",
     leftStick: readStick(gamepad, layout.leftStick),
     rightStick: readStick(gamepad, layout.rightStick),
     leftTrigger: withDeadzone(layout.leftTrigger(gamepad), TRIGGER_DEADZONE),
     rightTrigger: withDeadzone(layout.rightTrigger(gamepad), TRIGGER_DEADZONE),
     pressed: (button) => isPressed(gamepad, BUTTON_INDEX[button]),
   }
+}
+
+export function gamepadTouched(gamepad: GamepadState) {
+  const sticks = [gamepad.leftStick, gamepad.rightStick]
+  return (
+    sticks.some((stick) => stick.x !== 0 || stick.y !== 0) ||
+    gamepad.leftTrigger > 0 ||
+    gamepad.rightTrigger > 0 ||
+    GAMEPAD_BUTTONS.some(gamepad.pressed)
+  )
 }
 
 function readStick(gamepad: Gamepad, axes: StickAxes): Stick {

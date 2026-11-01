@@ -53,6 +53,7 @@ SOUNDS = [
     Sound("door_slam.wav", "haunts/door_slam.ogg", MONO, "64k"),
     Sound("chair_move.aiff", "haunts/chair_move.ogg", MONO, "64k", trim="none", keep_seconds=0.7),
     Sound("crawling_bug.wav", "haunts/crawling_bug.ogg", MONO, "64k", trim="none"),
+    Sound("zoom.wav", "zoom/zoom.ogg", STEREO, "96k"),
 ]
 
 

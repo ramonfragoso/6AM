@@ -4,7 +4,6 @@ import { MeshStandardNodeMaterial } from "three/webgpu"
 
 export const ghostLook = {
   opacity: uniform(0.85),
-  fade: uniform(1),
   color: uniform(new Color("#a9d6d3")),
   glow: uniform(0.15),
   roughness: uniform(0.6),
@@ -21,8 +20,6 @@ const EYES_MATERIAL = "ghost_eyes"
 
 const DECAL_MARKER = "ghost_decal_"
 
-const shown = ghostLook.opacity.mul(ghostLook.fade)
-
 export function isDecal(material: Material) {
   return material.name.startsWith(DECAL_MARKER)
 }
@@ -30,7 +27,7 @@ export function isDecal(material: Material) {
 export function ghostSurface(loaded: MeshStandardMaterial) {
   const surface = new MeshStandardNodeMaterial({ transparent: true, name: loaded.name })
   surface.roughnessNode = ghostLook.roughness
-  surface.opacityNode = shown
+  surface.opacityNode = ghostLook.opacity
   if (isDecal(loaded)) {
     surface.map = loaded.map
     surface.side = DoubleSide

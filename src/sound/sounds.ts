@@ -28,6 +28,7 @@ export const SOUNDS = {
   doorSlam: { url: "/sounds/haunts/door_slam.ogg", bus: "effects", volume: 0.8 },
   chairMove: { url: "/sounds/haunts/chair_move.ogg", bus: "effects", volume: 0.6 },
   crawlingBug: { url: "/sounds/haunts/crawling_bug.ogg", bus: "effects", volume: 0.5 },
+  zoom: { url: "/sounds/zoom/zoom.ogg", bus: "effects", volume: 0.5 },
 } satisfies Record<string, SoundSpec>
 
 export type SoundName = keyof typeof SOUNDS
