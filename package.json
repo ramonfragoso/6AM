@@ -19,6 +19,7 @@
     "@wolffo/three-fire": "^1.4.0",
     "leva": "^0.10.1",
     "next": "15.3.8",
+    "posthog-js": "^1.444.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "three": "^0.186.1"
