@@ -3,6 +3,7 @@ import { Leva } from "leva"
 import { useRef, useState, type RefObject } from "react"
 import type { Vector3Tuple } from "three"
 import { Ambience } from "@/ambience/Ambience"
+import { Analytics } from "@/analytics/Analytics"
 import { DEFAULT_FOV } from "@/camera/useCameraTuning"
 import { FieldOfView } from "@/camera/FieldOfView"
 import { Dawn } from "@/dawn/Dawn"
@@ -130,6 +131,7 @@ function Scene({ debugPlayerCoordinates, prompt, zoomTutorial, noteReading }: Sc
       <PostProcessing />
       <WarmUp />
       <GpuTime />
+      <Analytics />
     </>
   )
 }
