@@ -1,4 +1,6 @@
 import { MathUtils } from "three"
+import { cycleLanguage } from "@/i18n/language"
+import { LANGUAGE_PICKER } from "@/i18n/languageList"
 import { updateSettings } from "./gameSettings"
 
 export const MENU_ROW = "data-menu-row"
@@ -10,6 +12,8 @@ export const MENU_SCROLL = "data-menu-scroll"
 export const SETTING_KEY = "data-setting"
 
 const SLIDER_STEP = 0.05
+
+const RIGHT_TO_LEFT = "rtl"
 
 type SliderSetting = "sensitivity" | "volume"
 
@@ -29,14 +33,20 @@ export function moveFocus(menu: HTMLElement, step: number) {
 export function adjustFocused(menu: HTMLElement, step: number) {
   const focused = document.activeElement
   if (!(focused instanceof HTMLElement) || !menu.contains(focused)) return
+  if (focused.hasAttribute(LANGUAGE_PICKER)) {
+    cycleLanguage(step)
+    return
+  }
+  const onScreen = rightToLeft(focused) ? -step : step
   if (focused instanceof HTMLInputElement && focused.type === "range") {
     const setting = focused.getAttribute(SETTING_KEY) as SliderSetting
-    updateSettings({ [setting]: MathUtils.clamp(Number(focused.value) + step * SLIDER_STEP, 0, 1) })
+    const value = MathUtils.clamp(Number(focused.value) + onScreen * SLIDER_STEP, 0, 1)
+    updateSettings({ [setting]: value })
     return
   }
   if (focused.getAttribute("role") !== "radio") return
   const options = controlsOf(focused.closest(`[${MENU_ROW}]`))
-  const next = options[MathUtils.clamp(options.indexOf(focused) + step, 0, options.length - 1)]
+  const next = options[MathUtils.clamp(options.indexOf(focused) + onScreen, 0, options.length - 1)]
   next?.click()
   if (next) focusVisibly(next)
 }
@@ -50,6 +60,10 @@ export function pressFocused(menu: HTMLElement) {
 export function scrollMenu(menu: HTMLElement, pixels: number) {
   const scrolled = menu.querySelector(`[${MENU_SCROLL}]`)
   if (scrolled) scrolled.scrollTop += pixels
+}
+
+function rightToLeft(element: HTMLElement) {
+  return getComputedStyle(element).direction === RIGHT_TO_LEFT
 }
 
 function rowsOf(menu: HTMLElement) {

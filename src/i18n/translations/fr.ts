@@ -1,0 +1,59 @@
+import type { GameText } from "../gameText"
+
+export const fr: GameText = {
+  play: "Jouer",
+  language: "Langue",
+  loading: "Chargement",
+  gameView: "Vue du jeu",
+  noGraphics:
+    "Votre navigateur ne peut pas afficher de graphismes 3D. Essayez une version récente de Chrome, Edge, Firefox ou Safari.",
+  prompt: { lead: "APPUYEZ SUR", trail: "" },
+  zoom: "ZooM",
+  reading: {
+    close: "FERMER",
+    guideTitle: "Comment s’échapper :",
+    guideLines: [
+      "Regardez attentivement. Ne manquez aucune apparition.",
+      "Si vous trouvez une apparition, faites demi-tour immédiatement.",
+      "Si vous ne trouvez aucune apparition, continuez d’avancer.",
+      "Atteignez la dernière porte pour vous échapper.",
+    ],
+    hauntCount: {
+      one: "Il reste 1 apparition que vous n’avez pas trouvée.",
+      other: "Il reste {count} apparitions que vous n’avez pas trouvées.",
+    },
+  },
+  settings: {
+    title: "Paramètres",
+    quality: "Qualité",
+    qualities: { low: "Basse", medium: "Moyenne", max: "Maximale" },
+    bloom: "Bloom",
+    depthOfField: "Profondeur de champ",
+    sensitivity: "Sensibilité de la souris",
+    invertX: "Inverser l’axe X",
+    invertY: "Inverser l’axe Y",
+    volume: "Volume",
+    credits: "Crédits",
+    close: "Fermer",
+    back: "Retour",
+  },
+  credits: {
+    bylineLead: "Un jeu de",
+    developer: "Développeur",
+    closing: "Merci d’avoir joué",
+    playAgain: "Rejouer",
+    headings: {
+      music: "Musique",
+      models: "Modèles",
+      materials: "Matériaux",
+      paintings: "Peintures",
+      animationAndSound: "Animation et son",
+      typeAndCode: "Typographie et code",
+    },
+    ghostAnimations: "Animations du fantôme",
+    soundEffects: "Effets sonores",
+    freesoundContributors: "contributeurs de freesound.org",
+    publicDomain: "Domaine public",
+    freesoundLicenses: "Licences Freesound",
+  },
+}

@@ -1,16 +1,16 @@
+import { useText } from "@/i18n/text"
 import type { GameAsset } from "./downloads"
 import { METER_FADE_SECONDS, SCREEN_FADE_SECONDS, useLoadingScreen } from "./useLoadingScreen"
 
-const LOADING_LABEL = "Loading"
-
 export function LoadingScreen({ assets }: { assets: readonly GameAsset[] }) {
   const { screen, meter, percent, fill } = useLoadingScreen(assets)
+  const { text } = useText()
 
   return (
     <div
       ref={screen}
       role="progressbar"
-      aria-label={LOADING_LABEL}
+      aria-label={text.loading}
       className="fixed inset-0 z-[60] bg-black text-white transition-opacity ease-in-out"
       style={{ transitionDuration: `${SCREEN_FADE_SECONDS}s` }}
     >

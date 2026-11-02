@@ -1,3 +1,4 @@
+import { hauntCountText } from "@/i18n/text"
 import { useFrame } from "@react-three/fiber"
 import { type RefObject, useCallback, useRef } from "react"
 import { MathUtils } from "three"
@@ -13,7 +14,7 @@ import { playerPose } from "@/player/playerPose"
 import { settingsOpen } from "@/settings/settingsMenu"
 import { playing } from "@/title/title"
 import { READ_NOTES_PRIORITY } from "@/world/physicsSettings"
-import { hauntCountText, hauntsLeft, type Note } from "./guides"
+import { hauntsLeft, type Note } from "./guides"
 import { aimedNote, noteReading } from "./noteReading"
 import { type ReadingSettings, useReadingTuning } from "./useGuidesTuning"
 
