@@ -1,6 +1,7 @@
 import { MathUtils } from "three"
 import { LOOP_OUTCOMES, type LoopOutcome } from "@/night/loops"
-import { hauntById, hauntsOfKind } from "./allHaunts"
+import { hauntById } from "./allHaunts"
+import { isFeatured } from "./featuredHaunts"
 import { HAUNT_RULES, type NightSoFar, type OutcomeWeights } from "./hauntRules"
 import { type Haunt, HAUNT_KINDS, type HauntKind } from "./haunts"
 import { pooledHaunts, type Standings } from "./pool"
@@ -28,7 +29,7 @@ export type ForcedLoop = string
 
 const CLEAN_ONLY: OutcomeWeights = { loud: 0, subtle: 0, clean: 1 }
 
-const UNFOUND_CLEAN_SHARE = 0.5
+const UNFOUND_CLEAN_ODDS = 0.1
 
 export function drawLoop(
   night: NightSoFar,
@@ -51,12 +52,15 @@ export function drawLoop(
   const odds = unfound.length > 0 ? withFewerCleanLoops(normal) : normal
   const picked = pickOutcome(odds, random)
   const previous = previousHaunt(night)
+  const featured = featuresHaunts(night, settings) ? featuredHaunts(standings) : []
   const haunt =
     picked === "clean"
       ? null
       : unfound.length > 0
-        ? pickFrom(unfound, previous, random)
-        : pickFrom(pooledHaunts(picked, standings), previous, random)
+        ? pickFrom(preferred(unfound, isFeatured), previous, random)
+        : featured.length > 0
+          ? pickFrom(featured, previous, random)
+          : pickFrom(pooledHaunts(picked, standings), previous, random)
   return {
     outcome: haunt?.kind ?? "clean",
     haunt,
@@ -115,16 +119,26 @@ function pickFrom(haunts: Haunt[], previous: string | null, random: () => number
   return choices[Math.floor(random() * choices.length)] ?? null
 }
 
+function allPooledHaunts(standings: Standings) {
+  return HAUNT_KINDS.flatMap((kind) => pooledHaunts(kind, standings))
+}
+
 function unfoundHaunts(standings: Standings, found: ReadonlySet<string>) {
-  return HAUNT_KINDS.flatMap((kind) => pooledHaunts(kind, standings)).filter(
-    (haunt) => !found.has(haunt.id),
-  )
+  return allPooledHaunts(standings).filter((haunt) => !found.has(haunt.id))
+}
+
+function featuresHaunts({ hour }: NightSoFar, { newGamePlus, finalHour }: DrawSettings) {
+  return !newGamePlus && hour < finalHour
+}
+
+function featuredHaunts(standings: Standings) {
+  return allPooledHaunts(standings).filter(isFeatured)
 }
 
 function withFewerCleanLoops(odds: OutcomeWeights): OutcomeWeights {
   const drawable = HAUNT_KINDS.filter((kind) => odds[kind] > 0)
-  if (drawable.length === 0) return odds
-  const moved = odds.clean * (1 - UNFOUND_CLEAN_SHARE)
+  if (drawable.length === 0 || odds.clean <= UNFOUND_CLEAN_ODDS) return odds
+  const moved = odds.clean - UNFOUND_CLEAN_ODDS
   const fewer = { ...odds, clean: odds.clean - moved }
   for (const kind of drawable) fewer[kind] += moved / drawable.length
   return fewer
