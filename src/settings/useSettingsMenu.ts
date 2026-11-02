@@ -38,9 +38,9 @@ const MILLISECONDS = 1000
 
 type Repeat = { direction: number; nextAt: number }
 
-type MenuButtons = { start: boolean; east: boolean; south: boolean }
+type MenuButtons = { north: boolean; east: boolean; south: boolean }
 
-const RELEASED: MenuButtons = { start: false, east: false, south: false }
+const RELEASED: MenuButtons = { north: false, east: false, south: false }
 
 export function useSettingsMenu(menu: RefObject<HTMLElement | null>) {
   const [state, setState] = useState<SettingsMenuState>({ ...settingsMenu })
@@ -107,7 +107,7 @@ function useGamepadMenu(menu: RefObject<HTMLElement | null>) {
       const pressed = (button: keyof MenuButtons) => buttons[button] && !held[button]
       held = buttons
       if (!settingsMenu.open) {
-        if (pressed("start") && canOpenSettings()) {
+        if (pressed("north") && canOpenSettings()) {
           openSettings()
           if (menu.current) focusFirstRow(menu.current)
         }
@@ -115,7 +115,7 @@ function useGamepadMenu(menu: RefObject<HTMLElement | null>) {
       }
       const target = menu.current
       if (!target) return
-      if (pressed("start") || pressed("east")) {
+      if (pressed("north") || pressed("east")) {
         backOutOfSettings()
         return
       }
@@ -156,7 +156,7 @@ function usePlayerVolume() {
 
 function menuButtonsOf(gamepad: GamepadState): MenuButtons {
   return {
-    start: gamepad.pressed("start"),
+    north: gamepad.pressed("north"),
     east: gamepad.pressed("east"),
     south: gamepad.pressed("south"),
   }

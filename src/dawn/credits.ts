@@ -52,7 +52,11 @@ export const GAME_TITLE = "6AM"
 
 export const BYLINE = { lead: "A game by", name: "Ramon Fragoso" }
 
-export const DEVELOPER_CREDIT = { role: "Developer", name: BYLINE.name }
+export const DEVELOPER_CREDIT = {
+  role: "Developer",
+  name: BYLINE.name,
+  link: "https://www.linkedin.com/in/ramon-fragoso/",
+}
 
 export const CLOSING_LINE = "Thank you for playing"
 
@@ -141,12 +145,14 @@ export const CREDIT_SECTIONS: CreditSection[] = [
     entries: [
       { work: "Ghost animations", by: "Mixamo", license: "Adobe Mixamo" },
       { work: "UI Mechanical Text-Scroll", by: "InspectorJ, freesound.org", license: CC_BY },
+      { work: "Sound effects", by: "freesound.org contributors", license: "Freesound licenses" },
     ],
   },
   {
     heading: "Type and Code",
     entries: [
       { work: "Cinzel Decorative", by: "Natanael Gama", license: "SIL Open Font License" },
+      { work: "Homemade Apple", by: "Font Diner", license: "Apache 2.0" },
       { work: "three-fire", by: "wolffo", license: "MIT" },
       { work: "three.js", by: "three.js authors", license: "MIT" },
       { work: "React Three Fiber", by: "Poimandres", license: "MIT" },

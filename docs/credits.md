@@ -72,18 +72,20 @@ The Ceiling Lamp's `Iron brushed`, `black rubber` and `porcelain white` are Blen
 
 ## Animation, sound, type and code
 
-| Work                                                  | Author                   | License                                                           |
-| ----------------------------------------------------- | ------------------------ | ----------------------------------------------------------------- |
-| Ghost clips (Sad Idle, Walking, the strangle)         | Mixamo (Adobe)           | Mixamo terms: free in games, no credit required                   |
-| `clock_bug` (UI_Mechanical_Text-Scroll_03_FX_01_LOOP) | InspectorJ (jshaw.co.uk) | Probably CC BY 4.0 (freesound.org); confirm on its freesound page |
-| Fire texture and shader (`@wolffo/three-fire`)        | wolffo                   | MIT                                                               |
-| Cinzel Decorative                                     | Natanael Gama            | SIL Open Font License                                             |
-| three.js, React Three Fiber, Next.js                  | their authors            | MIT                                                               |
-| Rapier                                                | Dimforge                 | Apache 2.0                                                        |
+| Work                                                  | Author                     | License                                                           |
+| ----------------------------------------------------- | -------------------------- | ----------------------------------------------------------------- |
+| Ghost clips (Sad Idle, Walking, the strangle)         | Mixamo (Adobe)             | Mixamo terms: free in games, no credit required                   |
+| `clock_bug` (UI_Mechanical_Text-Scroll_03_FX_01_LOOP) | InspectorJ (jshaw.co.uk)   | Probably CC BY 4.0 (freesound.org); confirm on its freesound page |
+| Fire texture and shader (`@wolffo/three-fire`)        | wolffo                     | MIT                                                               |
+| Other sound effects (see Not traced)                  | freesound.org contributors | Credited together as "Sound effects, freesound.org"               |
+| Cinzel Decorative                                     | Natanael Gama              | SIL Open Font License                                             |
+| Homemade Apple (the Notes' handwriting)               | Font Diner                 | Apache 2.0                                                        |
+| three.js, React Three Fiber, Next.js                  | their authors              | MIT                                                               |
+| Rapier                                                | Dimforge                   | Apache 2.0                                                        |
 
 ## Not traced
 
 - **The Ghost's blood crosses**: `istockphoto-1293749427-170667a.png` and `istockphoto-1473845489-612x612.png` (backgrounds removed with iloveimg) are iStock preview images. Previews are not licensed for use; buy the licenses or replace them before release. Not in the Credits.
 - **The Ghost's skin texture** `Texture_skin_.png` points to `E:/modelos_3D/otto_octopus/`, a path from the author's machine; it most likely came with Male body reference (Rex Mun, CC0), but nothing in the file says so.
-- **Sounds**: no author or license found for `ambient_loop`, `ambient_loop2`, `candle` (recorded on a Zoom H4n), `clock_tick`, `clock_ring`, `door_opening`, `wood_step`, `tile_step`, the three `wood_creak`s, `piano_sting`, `piano_sting2`, `violin_stinger`, `violin_stinger2`, `jumpscare`, `angry_door_slam`, `door_slam`, `chair_move`, `crawling_bug` and `zoom`. The tags carry only encoder names. (`violin_stinger3` is tagged Aksel Qviller, `tense_stinger_A2`, but the game does not play it.) Not in the Credits.
+- **Sounds**: no author or license found for `ambient_loop`, `ambient_loop2`, `candle` (recorded on a Zoom H4n), `clock_tick`, `clock_ring`, `door_opening`, `wood_step`, `tile_step`, the three `wood_creak`s, `piano_sting`, `piano_sting2`, `violin_stinger`, `violin_stinger2`, `jumpscare`, `angry_door_slam`, `door_slam`, `chair_move`, `crawling_bug` and `zoom`. The tags carry only encoder names. (`violin_stinger3` is tagged Aksel Qviller, `tense_stinger_A2`, but the game does not play it.) The Credits name them only together, as sound effects from freesound.org.
 - **Self-made, as far as the file shows**: the Kit's walls, columns, roofs, doors, drains, Floor, Floor Divisions, Floor Tiles and Picture Frame geometry, the Safe Rooms, the Door Wall and the brass cross of the Crucifix. They carry no BlenderKit or Sketchfab metadata.
