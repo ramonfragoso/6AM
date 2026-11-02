@@ -7,6 +7,7 @@ import {
   type HauntOdds,
   type LoopDraw,
 } from "@/haunts/drawLoop"
+import { HAUNTS } from "@/haunts/allHaunts"
 import { hauntEvents } from "@/haunts/hauntEvents"
 import type { OutcomeWeights } from "@/haunts/hauntRules"
 import type { Haunt } from "@/haunts/haunts"
@@ -56,16 +57,31 @@ export type NightState = {
   refills: Refills
 }
 
+export type NightSession = {
+  loopsEnded: number
+  nightsWon: number
+  caught: Set<string>
+  hauntsLeft: number
+}
+
 type LoopStart = { forced: boolean; number: number; hour: number }
 
 const EVEN_WEIGHTS: OutcomeWeights = { loud: 1, subtle: 1, clean: 1 }
 
 type NightDrawSettings = DrawSettings & { nextLoop: string; forcedOnce: string | null }
 
+export const nightSession: NightSession = {
+  loopsEnded: 0,
+  nightsWon: 0,
+  caught: new Set(),
+  hauntsLeft: HAUNTS.length,
+}
+
 const drawSettings: NightDrawSettings = {
   odds: { atMidnight: EVEN_WEIGHTS, atSix: EVEN_WEIGHTS },
   enabledRules: new Set(),
   finalHour: FINAL_HOUR,
+  caught: nightSession.caught,
   nextLoop: DRAW,
   forcedOnce: null,
 }
@@ -87,8 +103,14 @@ export function startNight() {
   nightEvents.emit({ kind: "newNight" })
 }
 
+export function winNight() {
+  nightSession.nightsWon += 1
+  startNight()
+}
+
 export function endLoop(way: Way) {
   const { loop, standings, refills } = nightState
+  nightSession.loopsEnded += 1
   const passed = passes(loop.outcome, way)
   const manifested = loop.stage === "manifested"
   nightState.loops.push({
@@ -102,13 +124,16 @@ export function endLoop(way: Way) {
     forced: loop.forced,
   })
   if (loop.haunt && manifested) {
-    if (passed) catchHaunt(standings, loop.haunt)
-    else missHaunt(standings, loop.haunt)
+    if (passed) {
+      catchHaunt(standings, loop.haunt)
+      nightSession.caught.add(loop.haunt.id)
+    } else missHaunt(standings, loop.haunt)
     refillWhenEmpty(standings, refills)
   }
   nightEvents.emit({ kind: "verdict", passed, way })
   if (passed && nightState.hour === FINAL_HOUR) {
     nightState.phase = "dawn"
+    nightSession.nightsWon += 1
     ringClock()
     nightEvents.emit({ kind: "dawn" })
     return
@@ -175,6 +200,7 @@ function beginNight() {
     standings: freshStandings(),
     refills: freshRefills(),
   })
+  nightSession.hauntsLeft = HAUNTS.length - nightSession.caught.size
   setClockHour(0)
   chooseLoop()
 }

@@ -3,7 +3,9 @@ import { useEffect, useRef, useState } from "react"
 import { useViewpoint } from "@/debugPlayer/useViewpoint"
 import { nightState } from "@/night/night"
 import { strangling } from "@/ghost/strangleView"
+import { reading } from "@/guides/noteReading"
 import { loopState } from "@/passage/loopState"
+import { settingsOpen } from "@/settings/settingsMenu"
 import { playing } from "@/title/title"
 import { preloadSounds } from "@/sound/audioEngine"
 import type { PlayingSound } from "@/sound/playSound"
@@ -44,5 +46,12 @@ export function useZoom() {
 }
 
 export function playerHasControl() {
-  return playing() && !loopState.passing && !strangling() && nightState.phase === "playing"
+  return (
+    playing() &&
+    !loopState.passing &&
+    !strangling() &&
+    !reading() &&
+    !settingsOpen() &&
+    nightState.phase === "playing"
+  )
 }

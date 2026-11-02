@@ -7,7 +7,12 @@ import { pooledHaunts, type Standings } from "./pool"
 
 export type HauntOdds = { atMidnight: OutcomeWeights; atSix: OutcomeWeights }
 
-export type DrawSettings = { odds: HauntOdds; enabledRules: ReadonlySet<string>; finalHour: number }
+export type DrawSettings = {
+  odds: HauntOdds
+  enabledRules: ReadonlySet<string>
+  finalHour: number
+  caught: ReadonlySet<string>
+}
 
 export type FiredRule = { name: string; factors: Partial<OutcomeWeights> }
 
@@ -41,7 +46,9 @@ export function drawLoop(
   const odds = normalized(weights)
   const outcome = pickOutcome(odds, random)
   const haunt =
-    outcome === "clean" ? null : pickHaunt(outcome, standings, previousHaunt(night), random)
+    outcome === "clean"
+      ? null
+      : pickHaunt(outcome, standings, previousHaunt(night), settings.caught, random)
   return {
     outcome,
     haunt,
@@ -99,12 +106,18 @@ function pickHaunt(
   kind: HauntKind,
   standings: Standings,
   previous: string | null,
+  caught: ReadonlySet<string>,
   random: () => number,
 ) {
   const pooled = pooledHaunts(kind, standings)
-  const fresh = pooled.filter((haunt) => haunt.id !== previous)
-  const choices = fresh.length > 0 ? fresh : pooled
-  return choices[Math.floor(random() * choices.length)] ?? null
+  const choices = preferred(pooled, (haunt) => haunt.id !== previous)
+  const neverCaught = preferred(choices, (haunt) => !caught.has(haunt.id))
+  return neverCaught[Math.floor(random() * neverCaught.length)] ?? null
+}
+
+function preferred(haunts: Haunt[], wanted: (haunt: Haunt) => boolean) {
+  const kept = haunts.filter(wanted)
+  return kept.length > 0 ? kept : haunts
 }
 
 function previousHaunt({ loops }: NightSoFar) {

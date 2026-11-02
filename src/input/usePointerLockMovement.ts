@@ -2,11 +2,12 @@ import { useCallback, useEffect, useRef } from "react"
 
 export type PointerMovement = { x: number; y: number }
 
-export function usePointerLockMovement(target: HTMLElement) {
+export function usePointerLockMovement(target: HTMLElement, mayLock: () => boolean) {
   const movement = useRef<PointerMovement>({ x: 0, y: 0 })
 
   useEffect(() => {
     function lockPointer() {
+      if (!mayLock()) return
       target.requestPointerLock().catch(ignoreRefusedLock)
     }
 
@@ -23,7 +24,7 @@ export function usePointerLockMovement(target: HTMLElement) {
       target.removeEventListener("click", lockPointer)
       document.removeEventListener("mousemove", handleMouseMove)
     }
-  }, [target])
+  }, [target, mayLock])
 
   return useCallback((): PointerMovement => {
     const taken = { ...movement.current }

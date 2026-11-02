@@ -6,7 +6,9 @@ import type { CameraOffset } from "@/camera/cameraMotion"
 import { placeCamera, useCameraMotion } from "@/camera/useCameraMotion"
 import { useViewpoint } from "@/debugPlayer/useViewpoint"
 import { strangleView } from "@/ghost/strangleView"
+import { reading } from "@/guides/noteReading"
 import { usePassage } from "@/passage/usePassage"
+import { settingsOpen } from "@/settings/settingsMenu"
 import { emitStep } from "@/steps/stepEvents"
 import { useTitleCamera } from "@/title/useTitleCamera"
 import { READ_INPUT_PRIORITY } from "@/world/physicsSettings"
@@ -38,7 +40,7 @@ export function usePlayerMovement(spawnYaw: number, prompt: RefObject<HTMLElemen
   useFrame(({ clock }, delta) => {
     const read = readControls(delta)
     const passing = passage.update(clock.elapsedTime, delta)
-    const controls = viewed && !passing ? read : STANDING_STILL
+    const controls = viewed && !passing && !reading() && !settingsOpen() ? read : STANDING_STILL
     turnView(view.current, controls.look)
     if (body.current && !passing) walk(body.current, controls, view.current.y, walkSpeed)
   }, READ_INPUT_PRIORITY)

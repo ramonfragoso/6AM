@@ -2,7 +2,7 @@ import { button } from "leva"
 import { useEffect } from "react"
 import { HAUNTS } from "@/haunts/allHaunts"
 import { useTuningControls } from "@/tuning/useTuningControls"
-import { DRAW, setNextLoop, shiftHour, startNight } from "./night"
+import { DRAW, setNextLoop, shiftHour, startNight, winNight } from "./night"
 
 const NEXT_LOOP_OPTIONS: Record<string, string> = {
   Draw: DRAW,
@@ -24,6 +24,7 @@ export function useNightTesting() {
       "Hour +1": button(() => shiftHour(ONE_HOUR)),
       "Hour −1": button(() => shiftHour(-ONE_HOUR)),
       "New Night": button(startNight),
+      "Win Night": button(winNight),
     },
     { collapsed: true },
   )

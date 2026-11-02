@@ -1,6 +1,6 @@
 import { Physics } from "@react-three/rapier"
 import { Leva } from "leva"
-import { useRef, type RefObject } from "react"
+import { useRef, useState, type RefObject } from "react"
 import type { Vector3Tuple } from "three"
 import { Ambience } from "@/ambience/Ambience"
 import { DEFAULT_FOV } from "@/camera/useCameraTuning"
@@ -13,6 +13,7 @@ import { useDebugMode } from "@/debug/useDebugMode"
 import { DebugPlayer } from "@/debugPlayer/DebugPlayer"
 import { DebugPlayerCoordinates } from "@/debugPlayer/DebugPlayerCoordinates"
 import { Dust } from "@/dust/Dust"
+import { NoteReading } from "@/guides/NoteReading"
 import { HauntOverlay } from "@/haunts/HauntOverlay"
 import { Haunts } from "@/haunts/Haunts"
 import { Corridor } from "@/kit/Corridor"
@@ -20,6 +21,8 @@ import { Night } from "@/night/Night"
 import { Prompt } from "@/passage/Prompt"
 import { Player } from "@/player/Player"
 import { PostProcessing } from "@/postprocessing/PostProcessing"
+import { initialPixelRatio, QualityPixelRatio } from "@/settings/QualityPixelRatio"
+import { SettingsMenu } from "@/settings/SettingsMenu"
 import { SoundSystem } from "@/sound/SoundSystem"
 import { useTuningPersistence } from "@/tuning/useTuningPersistence"
 import { BlackoutScreen } from "@/blackout/BlackoutScreen"
@@ -30,8 +33,6 @@ import { WarmUp } from "@/loading/WarmUp"
 import { Lights } from "./Lights"
 import { GRAVITY, PHYSICS_STEP_PRIORITY, PHYSICS_TIME_STEP } from "./physicsSettings"
 import { WebGPUCanvas } from "./WebGPUCanvas"
-
-const PIXEL_RATIO: [number, number] = [1, 2]
 
 const INITIAL_CAMERA_POSITION: Vector3Tuple = [0, 0, 0]
 
@@ -57,12 +58,15 @@ type SceneProps = {
   debugPlayerCoordinates: RefObject<HTMLOutputElement | null>
   prompt: RefObject<HTMLParagraphElement | null>
   zoomTutorial: RefObject<HTMLDivElement | null>
+  noteReading: RefObject<HTMLDivElement | null>
 }
 
 export function World() {
   const debugPlayerCoordinates = useRef<HTMLOutputElement>(null)
   const prompt = useRef<HTMLParagraphElement>(null)
   const zoomTutorial = useRef<HTMLDivElement>(null)
+  const noteReading = useRef<HTMLDivElement>(null)
+  const [pixelRatio] = useState(initialPixelRatio)
 
   return (
     <main className="h-screen w-full">
@@ -72,12 +76,14 @@ export function World() {
       <DebugPlayerCoordinates ref={debugPlayerCoordinates} />
       <Prompt ref={prompt} />
       <ZoomTutorial ref={zoomTutorial} />
+      <NoteReading ref={noteReading} />
       {IN_DEVELOPMENT && <HauntOverlay />}
       <BlackoutScreen />
       <DawnScreen />
       <TitleScreen />
+      <SettingsMenu />
       <WebGPUCanvas
-        dpr={PIXEL_RATIO}
+        dpr={pixelRatio}
         camera={INITIAL_CAMERA}
         shadows={SOFT_SHADOWS}
         role="img"
@@ -90,6 +96,7 @@ export function World() {
             debugPlayerCoordinates={debugPlayerCoordinates}
             prompt={prompt}
             zoomTutorial={zoomTutorial}
+            noteReading={noteReading}
           />
         </LoadingBoundary>
       </WebGPUCanvas>
@@ -97,7 +104,7 @@ export function World() {
   )
 }
 
-function Scene({ debugPlayerCoordinates, prompt, zoomTutorial }: SceneProps) {
+function Scene({ debugPlayerCoordinates, prompt, zoomTutorial, noteReading }: SceneProps) {
   useTuningPersistence()
   const debugMode = useDebugMode()
 
@@ -112,11 +119,12 @@ function Scene({ debugPlayerCoordinates, prompt, zoomTutorial }: SceneProps) {
         updatePriority={PHYSICS_STEP_PRIORITY}
       >
         <Corridor />
-        <Player prompt={prompt} zoomTutorial={zoomTutorial} />
+        <Player prompt={prompt} zoomTutorial={zoomTutorial} noteReading={noteReading} />
       </Physics>
       <Dust />
       <DebugPlayer coordinatesReadout={debugPlayerCoordinates} />
       <FieldOfView />
+      <QualityPixelRatio />
       <SoundSystem />
       <Ambience />
       <Night />

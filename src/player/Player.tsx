@@ -2,6 +2,7 @@ import { CapsuleCollider, RigidBody } from "@react-three/rapier"
 import type { RefObject } from "react"
 import type { Vector3Tuple } from "three"
 import { startRoomSpawn } from "@/passage/spawn"
+import { useNoteReading } from "@/guides/useNoteReading"
 import { useStepSounds } from "@/steps/useStepSounds"
 import { useZoom } from "@/zoom/useZoom"
 import { useZoomTutorial } from "@/zoom/useZoomTutorial"
@@ -16,13 +17,15 @@ const SLIDES_ALONG_WALLS = 0
 type PlayerProps = {
   prompt: RefObject<HTMLElement | null>
   zoomTutorial: RefObject<HTMLElement | null>
+  noteReading: RefObject<HTMLElement | null>
 }
 
-export function Player({ prompt, zoomTutorial }: PlayerProps) {
+export function Player({ prompt, zoomTutorial, noteReading }: PlayerProps) {
   const { body, eye, eyeHeight, capsuleRadius } = usePlayerMovement(SPAWN.yaw, prompt)
   useStepSounds()
   useZoom()
   useZoomTutorial(zoomTutorial)
+  useNoteReading(noteReading)
   const capsuleHalfHeight = PLAYER_HEIGHT / 2 - capsuleRadius
   const capsuleCenter: Vector3Tuple = [0, PLAYER_HEIGHT / 2, 0]
 

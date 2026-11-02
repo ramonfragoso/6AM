@@ -22,6 +22,8 @@ const volumes: Volumes = {
 
 let fadedLevel = 1
 
+let playerVolume = 1
+
 const busFadedLevels: Record<Bus, number> = {
   effects: 1,
   ambience: 1,
@@ -46,6 +48,11 @@ export function unlockAudio() {
 
 export function setVolumes(next: Volumes) {
   Object.assign(volumes, next)
+  if (engine) applyVolumes(engine)
+}
+
+export function setPlayerVolume(level: number) {
+  playerVolume = level
   if (engine) applyVolumes(engine)
 }
 
@@ -112,7 +119,7 @@ function rampGain(context: AudioContext, gain: GainNode, level: number, seconds:
 }
 
 function applyVolumes({ master, buses }: AudioEngine) {
-  master.gain.value = volumes.master
+  master.gain.value = volumes.master * playerVolume
   for (const bus of BUSES) buses[bus].gain.value = volumes[bus]
 }
 

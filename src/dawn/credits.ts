@@ -52,6 +52,8 @@ export const GAME_TITLE = "6AM"
 
 export const BYLINE = { lead: "A game by", name: "Ramon Fragoso" }
 
+export const DEVELOPER_CREDIT = { role: "Developer", name: BYLINE.name }
+
 export const CLOSING_LINE = "Thank you for playing"
 
 export const BELOW_SCREEN = { transform: "translateY(100vh)" }

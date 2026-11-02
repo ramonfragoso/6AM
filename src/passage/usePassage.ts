@@ -3,6 +3,8 @@ import { type RefObject, useCallback, useEffect, useMemo, useRef } from "react"
 import { type Euler, MathUtils, Vector3 } from "three"
 import { strangling } from "@/ghost/strangleView"
 import { dawnLight, fillWithDawnLight } from "@/dawn/dawnLight"
+import { noteReading, reading } from "@/guides/noteReading"
+import { settingsOpen } from "@/settings/settingsMenu"
 import { dawnLightSettings } from "@/dawn/dawnLightSettings"
 import { bringsDawn, endLoop, nightState } from "@/night/night"
 import { type NightEvent, nightEvents } from "@/night/nightEvents"
@@ -227,10 +229,15 @@ export function usePassage(rig: PlayerRig, prompt: RefObject<HTMLElement | null>
         fadePrompt(HIDDEN, delta)
         return true
       }
-      const door = viewed
-        ? reachableDoor(doors, playerPose.eye, rig.view.current.y, promptTuning)
-        : null
-      fadePrompt(door ? SHOWN : HIDDEN, delta)
+      if (reading() || settingsOpen()) {
+        fadePrompt(HIDDEN, delta)
+        return heldPose.current !== null
+      }
+      const door =
+        viewed && !noteReading.aimed
+          ? reachableDoor(doors, playerPose.eye, rig.view.current.y, promptTuning)
+          : null
+      fadePrompt(door || noteReading.aimed ? SHOWN : HIDDEN, delta)
       if (door && open) begin(door, time)
       return passage.current !== null || heldPose.current !== null
     },

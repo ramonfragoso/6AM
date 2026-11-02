@@ -6,6 +6,7 @@ import { DawnLight } from "@/dawn/DawnLight"
 import { DoorWall, DoorWallLight } from "@/doorWall/DoorWall"
 import { DOOR_WALL_INDEX, DOOR_WALL_SIDE, withoutPlacement } from "@/doorWall/doorWall"
 import { Ghost } from "@/ghost/Ghost"
+import { Guides } from "@/guides/Guides"
 import { Paintings } from "@/paintings/Paintings"
 import { Props } from "@/props/Props"
 import { LampLight } from "@/safeRoom/LampLight"
@@ -57,6 +58,7 @@ export function Corridor() {
       <LoadingBoundary>
         <SafeRooms kit={kit} />
         <ClockTable kit={kit} />
+        <Guides />
         <DoorWall kit={kit} wall={DOOR_WALL} />
         <Ghost />
         <Cockroaches kit={kit} />

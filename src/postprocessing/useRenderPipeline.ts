@@ -4,6 +4,7 @@ import { useEffect, useMemo } from "react"
 import type { PerspectiveCamera, WebGPURenderer } from "three/webgpu"
 import { hauntState } from "@/haunts/hauntState"
 import { drawsScene } from "@/loading/loading"
+import { useGameSettings } from "@/settings/gameSettings"
 import { cameraZoom, withFarFocus } from "@/zoom/zoom"
 import { createPostProcessing } from "./postProcessing"
 import { useBloomTuning } from "./useBloomTuning"
@@ -27,10 +28,11 @@ export function useRenderPipeline() {
   const bloomTuning = useBloomTuning()
   const chromaticAberrationTuning = useChromaticAberrationTuning()
   const vignetteTuning = useVignetteTuning()
+  const gameSettings = useGameSettings()
   const { enabled, resolutionScale } = fogTuning
   const denoiser = fogTuning.denoiser as Denoiser
-  const depthOfFieldEnabled = depthOfFieldTuning.enabled
-  const bloomEnabled = bloomTuning.enabled
+  const depthOfFieldEnabled = depthOfFieldTuning.enabled && gameSettings.depthOfField
+  const bloomEnabled = bloomTuning.enabled && gameSettings.bloom
   const chromaticAberrationEnabled = chromaticAberrationTuning.enabled
   const vignetteEnabled = vignetteTuning.enabled
 
