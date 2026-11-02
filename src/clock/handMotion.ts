@@ -22,7 +22,7 @@ export const handMotionSettings: HandMotionSettings = {
   tickSeconds: 0.12,
   glitchSeconds: 0.07,
   resetSeconds: 0.45,
-  hourSeconds: 1.6,
+  hourSeconds: 0.1,
   overshoot: 1.2,
 }
 

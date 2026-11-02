@@ -147,7 +147,7 @@ function useHandControls() {
         handMotionSettings.hourSeconds,
         0,
         6,
-        "Seconds the hour Hand takes to sweep to a new Hour",
+        "Seconds the hour Hand takes to tick to a new Hour, with the same overshoot as a tick",
       ),
     },
     { collapsed: true },

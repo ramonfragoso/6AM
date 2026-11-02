@@ -35,6 +35,7 @@ import { type DoorSounding, useDoorSound } from "./useDoorSound"
 import { usePassageControls } from "./usePassageControls"
 import { usePassageTuning } from "./usePassageTuning"
 import { usePromptTuning } from "./usePromptTuning"
+import { useDeviceData } from "@/input/useDeviceData"
 
 export type PlayerRig = {
   body: RefObject<RapierRigidBody | null>
@@ -77,6 +78,7 @@ const SHOWN = 1
 
 export function usePassage(rig: PlayerRig, prompt: RefObject<HTMLElement | null>, viewed: boolean) {
   const readControls = usePassageControls()
+  useDeviceData(prompt)
   const tuning = usePassageTuning()
   const promptTuning = usePromptTuning()
   const soundDoor = useDoorSound()

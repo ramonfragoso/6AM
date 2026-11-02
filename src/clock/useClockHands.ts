@@ -96,7 +96,9 @@ function motionStyle(
 ): MotionStyle {
   const { tickSeconds, glitchSeconds, resetSeconds, hourSeconds } = handMotionSettings
   if (restarted) {
-    return { seconds: hand === "hour" ? hourSeconds : resetSeconds, easing: "sweep" }
+    return hand === "hour"
+      ? { seconds: hourSeconds, easing: "tick" }
+      : { seconds: resetSeconds, easing: "sweep" }
   }
   if (after.phase === "glitch") return { seconds: glitchSeconds, easing: "tick" }
   if (before.phase === "glitch") return { seconds: resetSeconds, easing: "sweep" }

@@ -62,7 +62,7 @@
   "Clock.Dial.printed": 1,
   "Clock.Hands.color": "#050505",
   "Clock.Hands.glitchSeconds": 0.07,
-  "Clock.Hands.hourSeconds": 1.6,
+  "Clock.Hands.hourSeconds": 0.1,
   "Clock.Hands.metalness": 0.646,
   "Clock.Hands.overshoot": 1.2,
   "Clock.Hands.resetSeconds": 0.45,
