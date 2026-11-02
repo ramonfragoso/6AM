@@ -1,0 +1,61 @@
+import type { GameText } from "../gameText"
+
+export const ar: GameText = {
+  play: "العب",
+  language: "اللغة",
+  loading: "جارٍ التحميل",
+  gameView: "مشهد اللعبة",
+  noGraphics:
+    "لا يستطيع متصفحك تشغيل الرسومات ثلاثية الأبعاد. جرّب إصدارًا حديثًا من Chrome أو Edge أو Firefox أو Safari.",
+  prompt: { lead: "اضغط", trail: "" },
+  zoom: "تكبير",
+  reading: {
+    close: "إغلاق",
+    guideTitle: "كيف تهرب:",
+    guideLines: [
+      "انظر بعناية. لا تفوّت أي ظاهرة غريبة.",
+      "إذا وجدت ظاهرة غريبة، فارجع فورًا.",
+      "إذا لم تجد أي ظاهرة غريبة، فواصل السير.",
+      "صِل إلى الباب الأخير لتهرب.",
+    ],
+    hauntCount: {
+      one: "بقيت ظاهرة غريبة واحدة لم تعثر عليها بعد.",
+      two: "بقيت ظاهرتان غريبتان لم تعثر عليهما بعد.",
+      few: "بقيت {count} ظواهر غريبة لم تعثر عليها بعد.",
+      other: "بقيت {count} ظاهرة غريبة لم تعثر عليها بعد.",
+    },
+  },
+  settings: {
+    title: "الإعدادات",
+    quality: "الجودة",
+    qualities: { low: "منخفضة", medium: "متوسطة", max: "قصوى" },
+    bloom: "التوهج",
+    depthOfField: "عمق الميدان",
+    sensitivity: "حساسية الفأرة",
+    invertX: "عكس المحور X",
+    invertY: "عكس المحور Y",
+    volume: "مستوى الصوت",
+    credits: "الاعتمادات",
+    close: "إغلاق",
+    back: "رجوع",
+  },
+  credits: {
+    bylineLead: "لعبة من تطوير",
+    developer: "المطوّر",
+    closing: "شكرًا لك على اللعب",
+    playAgain: "العب مجددًا",
+    headings: {
+      music: "الموسيقى",
+      models: "النماذج",
+      materials: "الخامات",
+      paintings: "اللوحات",
+      animationAndSound: "الحركة والصوت",
+      typeAndCode: "الخطوط والبرمجة",
+    },
+    ghostAnimations: "حركات الشبح",
+    soundEffects: "المؤثرات الصوتية",
+    freesoundContributors: "مساهمو freesound.org",
+    publicDomain: "ملكية عامة",
+    freesoundLicenses: "تراخيص Freesound",
+  },
+}

@@ -1,6 +1,6 @@
 # Credits: sources and licenses
 
-Where every borrowed work in the game comes from. `src/dawn/credits.ts` (`CREDIT_SECTIONS`) is what the Credits Roll shows; keep both in step.
+Where every borrowed work in the game comes from. `src/dawn/credits.ts` (`creditSections`) is what the Credits Roll shows; keep both in step.
 
 Traced on 2026-11-01 from `house_interior.blend` (BlenderKit's `asset_data` on objects and materials, and the BlenderKit download folders in `<blend dir>/assets/models` and `assets/materials`, whose ids were looked up on the BlenderKit API), the glTF `asset.extras` of the Sketchfab downloads, and the source files' tags.
 
@@ -72,16 +72,18 @@ The Ceiling Lamp's `Iron brushed`, `black rubber` and `porcelain white` are Blen
 
 ## Animation, sound, type and code
 
-| Work                                                  | Author                     | License                                                           |
-| ----------------------------------------------------- | -------------------------- | ----------------------------------------------------------------- |
-| Ghost clips (Sad Idle, Walking, the strangle)         | Mixamo (Adobe)             | Mixamo terms: free in games, no credit required                   |
-| `clock_bug` (UI_Mechanical_Text-Scroll_03_FX_01_LOOP) | InspectorJ (jshaw.co.uk)   | Probably CC BY 4.0 (freesound.org); confirm on its freesound page |
-| Fire texture and shader (`@wolffo/three-fire`)        | wolffo                     | MIT                                                               |
-| Other sound effects (see Not traced)                  | freesound.org contributors | Credited together as "Sound effects, freesound.org"               |
-| Cinzel Decorative                                     | Natanael Gama              | SIL Open Font License                                             |
-| Homemade Apple (the Notes' handwriting)               | Font Diner                 | Apache 2.0                                                        |
-| three.js, React Three Fiber, Next.js                  | their authors              | MIT                                                               |
-| Rapier                                                | Dimforge                   | Apache 2.0                                                        |
+| Work                                                  | Author                                   | License                                                           |
+| ----------------------------------------------------- | ---------------------------------------- | ----------------------------------------------------------------- |
+| Ghost clips (Sad Idle, Walking, the strangle)         | Mixamo (Adobe)                           | Mixamo terms: free in games, no credit required                   |
+| `clock_bug` (UI_Mechanical_Text-Scroll_03_FX_01_LOOP) | InspectorJ (jshaw.co.uk)                 | Probably CC BY 4.0 (freesound.org); confirm on its freesound page |
+| Fire texture and shader (`@wolffo/three-fire`)        | wolffo                                   | MIT                                                               |
+| Other sound effects (see Not traced)                  | freesound.org contributors               | Credited together as "Sound effects, freesound.org"               |
+| Cinzel Decorative                                     | Natanael Gama                            | SIL Open Font License                                             |
+| Homemade Apple (the Notes' handwriting)               | Font Diner                               | Apache 2.0                                                        |
+| Noto Serif SC, Noto Serif JP, Noto Naskh Arabic       | Google                                   | SIL Open Font License                                             |
+| Sahitya (Hindi)                                       | Juan Pablo del Peral, Huerta Tipográfica | SIL Open Font License                                             |
+| three.js, React Three Fiber, Next.js                  | their authors                            | MIT                                                               |
+| Rapier                                                | Dimforge                                 | Apache 2.0                                                        |
 
 ## Not traced
 

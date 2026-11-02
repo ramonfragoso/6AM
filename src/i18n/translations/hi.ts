@@ -1,0 +1,59 @@
+import type { GameText } from "../gameText"
+
+export const hi: GameText = {
+  play: "खेलें",
+  language: "भाषा",
+  loading: "लोड हो रहा है",
+  gameView: "गेम का दृश्य",
+  noGraphics:
+    "आपका ब्राउज़र 3D ग्राफ़िक्स नहीं चला सकता। Chrome, Edge, Firefox या Safari का नया संस्करण आज़माएँ।",
+  prompt: { lead: "", trail: "दबाएँ" },
+  zoom: "ज़ूम",
+  reading: {
+    close: "बंद करें",
+    guideTitle: "बचकर कैसे निकलें:",
+    guideLines: [
+      "ध्यान से देखें। कोई भी भूतिया घटना छूटनी नहीं चाहिए।",
+      "अगर कोई भूतिया घटना दिखे, तो तुरंत वापस मुड़ें।",
+      "अगर कोई भूतिया घटना न दिखे, तो चलते रहें।",
+      "बचकर निकलने के लिए आख़िरी दरवाज़े तक पहुँचें।",
+    ],
+    hauntCount: {
+      one: "{count} भूतिया घटना बाकी है जो आपको अभी तक नहीं मिली।",
+      other: "{count} भूतिया घटनाएँ बाकी हैं जो आपको अभी तक नहीं मिलीं।",
+    },
+  },
+  settings: {
+    title: "सेटिंग्स",
+    quality: "क्वालिटी",
+    qualities: { low: "कम", medium: "मध्यम", max: "अधिकतम" },
+    bloom: "ब्लूम",
+    depthOfField: "डेप्थ ऑफ़ फ़ील्ड",
+    sensitivity: "माउस सेंसिटिविटी",
+    invertX: "X अक्ष उलटें",
+    invertY: "Y अक्ष उलटें",
+    volume: "वॉल्यूम",
+    credits: "क्रेडिट्स",
+    close: "बंद करें",
+    back: "वापस",
+  },
+  credits: {
+    bylineLead: "निर्माता",
+    developer: "डेवलपर",
+    closing: "खेलने के लिए धन्यवाद",
+    playAgain: "फिर से खेलें",
+    headings: {
+      music: "संगीत",
+      models: "मॉडल",
+      materials: "मटीरियल",
+      paintings: "चित्र",
+      animationAndSound: "एनिमेशन और ध्वनि",
+      typeAndCode: "फ़ॉन्ट और कोड",
+    },
+    ghostAnimations: "भूत के एनिमेशन",
+    soundEffects: "साउंड इफ़ेक्ट्स",
+    freesoundContributors: "freesound.org के योगदानकर्ता",
+    publicDomain: "सार्वजनिक डोमेन",
+    freesoundLicenses: "Freesound लाइसेंस",
+  },
+}

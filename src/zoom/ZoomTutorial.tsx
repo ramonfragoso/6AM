@@ -1,8 +1,7 @@
 import type { Ref } from "react"
+import { useText } from "@/i18n/text"
 import { ZoomButtonIcon } from "./ZoomButtonIcon"
 import { ZOOM_FILL_PROPERTY } from "./useZoomTutorial"
-
-const ZOOM_TEXT = "ZooM"
 
 const FILL = `var(${ZOOM_FILL_PROPERTY}, 0)`
 
@@ -15,6 +14,8 @@ const SHOWN_ONCE_FULL = `calc((${FILL} - 0.999) * 1000)`
 type ZoomTutorialProps = { ref: Ref<HTMLDivElement> }
 
 export function ZoomTutorial({ ref }: ZoomTutorialProps) {
+  const { text } = useText()
+
   return (
     <div
       ref={ref}
@@ -23,7 +24,7 @@ export function ZoomTutorial({ ref }: ZoomTutorialProps) {
     >
       <div className="flex items-center gap-3">
         <p className="text-2xl tracking-[0.2em] whitespace-nowrap [text-shadow:0_0_10px_rgb(0_0_0/0.9),0_0_2px_rgb(0_0_0)]">
-          {ZOOM_TEXT}
+          {text.zoom}
         </p>
         <ZoomButtonIcon />
       </div>

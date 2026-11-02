@@ -16,6 +16,7 @@ import { Dust } from "@/dust/Dust"
 import { NoteReading } from "@/guides/NoteReading"
 import { HauntOverlay } from "@/haunts/HauntOverlay"
 import { Haunts } from "@/haunts/Haunts"
+import { useText } from "@/i18n/text"
 import { Corridor } from "@/kit/Corridor"
 import { Night } from "@/night/Night"
 import { Prompt } from "@/passage/Prompt"
@@ -49,11 +50,6 @@ const SOFT_SHADOWS = "percentage"
 
 const TUNING_PANEL_THEME = { sizes: { numberInputMinWidth: "48px" } }
 
-const GAME_VIEW_LABEL = "Game view"
-
-const NO_GRAPHICS_MESSAGE =
-  "Your browser can't run 3D graphics. Try a recent version of Chrome, Edge, Firefox or Safari."
-
 type SceneProps = {
   debugPlayerCoordinates: RefObject<HTMLOutputElement | null>
   prompt: RefObject<HTMLParagraphElement | null>
@@ -67,6 +63,7 @@ export function World() {
   const zoomTutorial = useRef<HTMLDivElement>(null)
   const noteReading = useRef<HTMLDivElement>(null)
   const [pixelRatio] = useState(initialPixelRatio)
+  const { text } = useText()
 
   return (
     <main className="h-screen w-full">
@@ -87,7 +84,7 @@ export function World() {
         camera={INITIAL_CAMERA}
         shadows={SOFT_SHADOWS}
         role="img"
-        aria-label={GAME_VIEW_LABEL}
+        aria-label={text.gameView}
         fallback={<NoGraphicsMessage />}
       >
         <color attach="background" args={[BACKGROUND_COLOR]} />
@@ -138,9 +135,11 @@ function Scene({ debugPlayerCoordinates, prompt, zoomTutorial, noteReading }: Sc
 }
 
 function NoGraphicsMessage() {
+  const { text, dir } = useText()
+
   return (
-    <p className="grid h-full place-items-center p-4 text-center text-white">
-      {NO_GRAPHICS_MESSAGE}
+    <p dir={dir} className="grid h-full place-items-center p-4 text-center text-white">
+      {text.noGraphics}
     </p>
   )
 }

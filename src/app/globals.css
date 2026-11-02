@@ -1,5 +1,32 @@
 @import "tailwindcss";
 
+html {
+  font-family: var(--font-cinzel-decorative), serif;
+}
+
+[lang="hi"] {
+  font-family: var(--font-cinzel-decorative), var(--font-sahitya), serif;
+}
+
+[lang="zh-CN"] {
+  font-family: var(--font-cinzel-decorative), var(--font-noto-serif-sc), serif;
+}
+
+[lang="ja"] {
+  font-family: var(--font-cinzel-decorative), var(--font-noto-serif-jp), serif;
+}
+
+[lang="ar"] {
+  font-family: var(--font-cinzel-decorative), var(--font-noto-naskh-arabic), serif;
+}
+
+[lang="hi"],
+[lang="hi"] *,
+[lang="ar"],
+[lang="ar"] * {
+  letter-spacing: 0 !important;
+}
+
 body {
   background: #000;
 }

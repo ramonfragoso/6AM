@@ -1,0 +1,56 @@
+import type { GameText } from "../gameText"
+
+export const ja: GameText = {
+  play: "プレイ",
+  language: "言語",
+  loading: "読み込み中",
+  gameView: "ゲーム画面",
+  noGraphics:
+    "お使いのブラウザでは 3D グラフィックスを表示できません。最新版の Chrome、Edge、Firefox、Safari をお試しください。",
+  prompt: { lead: "", trail: "を押す" },
+  zoom: "ズーム",
+  reading: {
+    close: "閉じる",
+    guideTitle: "脱出するには：",
+    guideLines: [
+      "よく見ること。怪異をひとつも見逃さないこと。",
+      "怪異を見つけたら、すぐに引き返すこと。",
+      "怪異が見つからなければ、そのまま進むこと。",
+      "最後の扉にたどり着けば、脱出できる。",
+    ],
+    hauntCount: { other: "まだ見つけていない怪異が、あと {count} 件ある。" },
+  },
+  settings: {
+    title: "設定",
+    quality: "画質",
+    qualities: { low: "低", medium: "中", max: "最高" },
+    bloom: "ブルーム",
+    depthOfField: "被写界深度",
+    sensitivity: "マウス感度",
+    invertX: "X 軸を反転",
+    invertY: "Y 軸を反転",
+    volume: "音量",
+    credits: "クレジット",
+    close: "閉じる",
+    back: "戻る",
+  },
+  credits: {
+    bylineLead: "制作",
+    developer: "開発",
+    closing: "遊んでくれてありがとう",
+    playAgain: "もう一度プレイ",
+    headings: {
+      music: "音楽",
+      models: "モデル",
+      materials: "マテリアル",
+      paintings: "絵画",
+      animationAndSound: "アニメーションとサウンド",
+      typeAndCode: "フォントとコード",
+    },
+    ghostAnimations: "幽霊のアニメーション",
+    soundEffects: "効果音",
+    freesoundContributors: "freesound.org の投稿者",
+    publicDomain: "パブリックドメイン",
+    freesoundLicenses: "Freesound ライセンス",
+  },
+}

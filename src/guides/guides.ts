@@ -23,15 +23,6 @@ export const HAUNT_COUNT_TEXTURE_URLS = HAUNTS.map(
   (_, index) => `${NOTE_TEXTURES_URL}/haunts_left_${index + 1}.ktx2`,
 )
 
-export const GUIDE_TITLE = "How to escape:"
-
-export const GUIDE_LINES = [
-  "Look carefully. Do not miss any haunts.",
-  "If you find a haunt, turn back immediately.",
-  "If you do not find a haunt, keep walking.",
-  "Reach the final door to escape.",
-]
-
 export type NoteSpot = {
   along: number
   height: number
@@ -58,14 +49,6 @@ const DOORWAY_WALL_FACE = 1.95
 const FACING_INTO_ROOM = new Matrix4().makeRotationY(Math.PI)
 
 const HIDDEN_SCALE = new Matrix4().makeScale(0, 0, 0)
-
-const ONE_HAUNT = 1
-
-export function hauntCountText(count: number) {
-  return count === ONE_HAUNT
-    ? "There is 1 haunt that you have not found."
-    : `There are ${count} haunts that you have not found.`
-}
 
 export function noteMatrix({ along, height, out, size }: NoteSpot, bounds: Box3) {
   const center = bounds.getCenter(new Vector3())

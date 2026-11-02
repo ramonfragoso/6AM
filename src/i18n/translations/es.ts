@@ -1,0 +1,59 @@
+import type { GameText } from "../gameText"
+
+export const es: GameText = {
+  play: "Jugar",
+  language: "Idioma",
+  loading: "Cargando",
+  gameView: "Vista del juego",
+  noGraphics:
+    "Tu navegador no puede mostrar gráficos 3D. Prueba una versión reciente de Chrome, Edge, Firefox o Safari.",
+  prompt: { lead: "PULSA", trail: "" },
+  zoom: "ZooM",
+  reading: {
+    close: "CERRAR",
+    guideTitle: "Cómo escapar:",
+    guideLines: [
+      "Mira con atención. No pases por alto ninguna aparición.",
+      "Si encuentras una aparición, da la vuelta de inmediato.",
+      "Si no encuentras ninguna aparición, sigue caminando.",
+      "Llega a la última puerta para escapar.",
+    ],
+    hauntCount: {
+      one: "Hay 1 aparición que todavía no has encontrado.",
+      other: "Hay {count} apariciones que todavía no has encontrado.",
+    },
+  },
+  settings: {
+    title: "Ajustes",
+    quality: "Calidad",
+    qualities: { low: "Baja", medium: "Media", max: "Máxima" },
+    bloom: "Bloom",
+    depthOfField: "Profundidad de campo",
+    sensitivity: "Sensibilidad del ratón",
+    invertX: "Invertir eje X",
+    invertY: "Invertir eje Y",
+    volume: "Volumen",
+    credits: "Créditos",
+    close: "Cerrar",
+    back: "Volver",
+  },
+  credits: {
+    bylineLead: "Un juego de",
+    developer: "Desarrollador",
+    closing: "Gracias por jugar",
+    playAgain: "Jugar de nuevo",
+    headings: {
+      music: "Música",
+      models: "Modelos",
+      materials: "Materiales",
+      paintings: "Pinturas",
+      animationAndSound: "Animación y sonido",
+      typeAndCode: "Tipografía y código",
+    },
+    ghostAnimations: "Animaciones del fantasma",
+    soundEffects: "Efectos de sonido",
+    freesoundContributors: "colaboradores de freesound.org",
+    publicDomain: "Dominio público",
+    freesoundLicenses: "Licencias de Freesound",
+  },
+}

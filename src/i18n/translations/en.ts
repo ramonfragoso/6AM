@@ -1,0 +1,59 @@
+import type { GameText } from "../gameText"
+
+export const en: GameText = {
+  play: "Play",
+  language: "Language",
+  loading: "Loading",
+  gameView: "Game view",
+  noGraphics:
+    "Your browser can't run 3D graphics. Try a recent version of Chrome, Edge, Firefox or Safari.",
+  prompt: { lead: "PRESS", trail: "" },
+  zoom: "ZooM",
+  reading: {
+    close: "CLOSE",
+    guideTitle: "How to escape:",
+    guideLines: [
+      "Look carefully. Do not miss any haunts.",
+      "If you find a haunt, turn back immediately.",
+      "If you do not find a haunt, keep walking.",
+      "Reach the final door to escape.",
+    ],
+    hauntCount: {
+      one: "There is 1 haunt that you have not found.",
+      other: "There are {count} haunts that you have not found.",
+    },
+  },
+  settings: {
+    title: "Settings",
+    quality: "Quality",
+    qualities: { low: "Low", medium: "Medium", max: "Max" },
+    bloom: "Bloom",
+    depthOfField: "Depth of Field",
+    sensitivity: "Mouse sensitivity",
+    invertX: "Invert X axis",
+    invertY: "Invert Y axis",
+    volume: "Volume",
+    credits: "Credits",
+    close: "Close",
+    back: "Back",
+  },
+  credits: {
+    bylineLead: "A game by",
+    developer: "Developer",
+    closing: "Thank you for playing",
+    playAgain: "Play again",
+    headings: {
+      music: "Music",
+      models: "Models",
+      materials: "Materials",
+      paintings: "Paintings",
+      animationAndSound: "Animation and Sound",
+      typeAndCode: "Type and Code",
+    },
+    ghostAnimations: "Ghost animations",
+    soundEffects: "Sound effects",
+    freesoundContributors: "freesound.org contributors",
+    publicDomain: "Public domain",
+    freesoundLicenses: "Freesound licenses",
+  },
+}

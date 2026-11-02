@@ -1,4 +1,7 @@
 import { type ChangeEvent, type ReactNode, useRef } from "react"
+import type { GameText } from "@/i18n/gameText"
+import { LanguagePicker } from "@/i18n/LanguagePicker"
+import { useText } from "@/i18n/text"
 import {
   type GameSettings,
   QUALITIES,
@@ -15,29 +18,17 @@ type ToggleSetting = "bloom" | "depthOfField" | "invertX" | "invertY"
 
 type SliderSetting = "sensitivity" | "volume"
 
-const TITLE = "Settings"
-
-const QUALITY_LABEL = "Quality"
-
-const QUALITY_NAMES: Record<Quality, string> = { low: "Low", medium: "Medium", max: "Max" }
-
-const SENSITIVITY_LABEL = "Mouse sensitivity"
-
-const VOLUME_LABEL = "Volume"
-
-const CREDITS_TEXT = "Credits"
-
-const CLOSE_TEXT = "Close"
-
-const TOGGLES: { setting: ToggleSetting; label: string }[] = [
-  { setting: "bloom", label: "Bloom" },
-  { setting: "depthOfField", label: "Depth of Field" },
+const TOGGLES: { setting: ToggleSetting; label: (text: SettingsText) => string }[] = [
+  { setting: "bloom", label: (text) => text.bloom },
+  { setting: "depthOfField", label: (text) => text.depthOfField },
 ]
 
-const INVERSIONS: { setting: ToggleSetting; label: string }[] = [
-  { setting: "invertX", label: "Invert X axis" },
-  { setting: "invertY", label: "Invert Y axis" },
+const INVERSIONS: { setting: ToggleSetting; label: (text: SettingsText) => string }[] = [
+  { setting: "invertX", label: (text) => text.invertX },
+  { setting: "invertY", label: (text) => text.invertY },
 ]
+
+type SettingsText = GameText["settings"]
 
 const SLIDER_STEP = 0.01
 
@@ -53,10 +44,12 @@ const BUTTON = `rounded border border-white/70 px-8 py-2 text-xl tracking-[0.3em
 export function SettingsMenu() {
   const menu = useRef<HTMLDivElement>(null)
   const { open, page } = useSettingsMenu(menu)
+  const { dir } = useText()
 
   return (
     <div
       ref={menu}
+      dir={dir}
       inert={!open}
       aria-hidden={!open}
       className={`fixed inset-0 z-[46] grid place-items-center text-white transition-opacity duration-200 ease-out select-none ${SHADOWED_TEXT}`}
@@ -73,32 +66,42 @@ export function SettingsMenu() {
 
 function MainPage() {
   const settings = useGameSettings()
+  const { text } = useText()
+  const words = text.settings
 
   return (
     <div className="relative flex max-h-full flex-col items-center gap-6 overflow-y-auto px-4 py-8 text-center">
-      <h2 className="mb-2 text-4xl tracking-[0.15em]">{TITLE}</h2>
-      <QualityChoice quality={settings.quality} />
+      <h2 className="mb-2 text-4xl tracking-[0.15em]">{words.title}</h2>
+      <div {...{ [MENU_ROW]: "" }} className="flex flex-col items-center gap-2">
+        <p className="text-lg tracking-[0.15em]">{text.language}</p>
+        <LanguagePicker
+          opens="below"
+          label={text.language}
+          controlAttributes={{ [MENU_CONTROL]: "" }}
+        />
+      </div>
+      <QualityChoice quality={settings.quality} text={words} />
       {TOGGLES.map(({ setting, label }) => (
-        <Toggle key={setting} setting={setting} label={label} settings={settings} />
+        <Toggle key={setting} setting={setting} label={label(words)} settings={settings} />
       ))}
-      <Slider setting="sensitivity" label={SENSITIVITY_LABEL} settings={settings} />
+      <Slider setting="sensitivity" label={words.sensitivity} settings={settings} />
       {INVERSIONS.map(({ setting, label }) => (
-        <Toggle key={setting} setting={setting} label={label} settings={settings} />
+        <Toggle key={setting} setting={setting} label={label(words)} settings={settings} />
       ))}
-      <Slider setting="volume" label={VOLUME_LABEL} settings={settings} />
+      <Slider setting="volume" label={words.volume} settings={settings} />
       <div className="mt-2 flex flex-col items-center gap-4">
-        <MenuButton onClick={() => showSettingsPage("credits")}>{CREDITS_TEXT}</MenuButton>
-        <MenuButton onClick={closeSettings}>{CLOSE_TEXT}</MenuButton>
+        <MenuButton onClick={() => showSettingsPage("credits")}>{words.credits}</MenuButton>
+        <MenuButton onClick={closeSettings}>{words.close}</MenuButton>
       </div>
     </div>
   )
 }
 
-function QualityChoice({ quality }: { quality: Quality }) {
+function QualityChoice({ quality, text }: { quality: Quality; text: SettingsText }) {
   return (
     <div {...{ [MENU_ROW]: "" }} className="flex flex-col items-center gap-2">
-      <p className="text-lg tracking-[0.15em]">{QUALITY_LABEL}</p>
-      <div role="radiogroup" aria-label={QUALITY_LABEL} className="flex gap-2">
+      <p className="text-lg tracking-[0.15em]">{text.quality}</p>
+      <div role="radiogroup" aria-label={text.quality} className="flex gap-2">
         {QUALITIES.map((option) => (
           <button
             key={option}
@@ -109,7 +112,7 @@ function QualityChoice({ quality }: { quality: Quality }) {
             onClick={() => updateSettings({ quality: option })}
             className={`rounded border px-4 py-1 text-base tracking-[0.15em] ${FOCUS_RING} ${option === quality ? "border-white bg-white/15" : "border-white/30 text-white/60 hover:text-white"}`}
           >
-            {QUALITY_NAMES[option]}
+            {text.qualities[option]}
           </button>
         ))}
       </div>
