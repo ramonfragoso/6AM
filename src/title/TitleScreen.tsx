@@ -22,7 +22,7 @@ export function TitleScreen() {
       dir={dir}
       aria-hidden={!shown}
       inert={!playable}
-      className="pointer-events-none fixed inset-0 z-40 flex flex-col items-center justify-between py-[10vh] text-white"
+      className="pointer-events-none fixed inset-0 z-40 flex flex-col items-center justify-between pt-[10vh] pb-[4vh] text-white"
     >
       <h1
         className="text-[22vmin] leading-none tracking-[0.06em] transition-opacity ease-in-out [text-shadow:0_0_3vmin_rgb(0_0_0/0.8),0_0_6vmin_rgb(255_255_255/0.25)]"
