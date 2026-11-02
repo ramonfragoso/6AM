@@ -10,7 +10,8 @@ export const fr: GameText = {
   prompt: { lead: "APPUYEZ SUR", trail: "" },
   zoom: "ZooM",
   reading: {
-    close: "FERMER",
+    closeWithKey: "APPUYEZ SUR UNE TOUCHE",
+    closeWithButton: "APPUYEZ SUR UN BOUTON",
     guideTitle: "Comment s’échapper :",
     guideLines: [
       "Regardez attentivement. Ne manquez aucune apparition.",

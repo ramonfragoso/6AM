@@ -1,27 +1,15 @@
-import { FaceButtonIcon } from "@/input/FaceButtonIcon"
+import { TriggerButtonIcon } from "@/input/TriggerButtonIcon"
 
-const XBOX_X_BLUE = "#3d8af7"
+const XBOX_RIGHT_TRIGGER = "RT"
 
-const PLAYSTATION_SQUARE_PINK = "#e58fc6"
+const PLAYSTATION_RIGHT_TRIGGER = "R2"
 
 export function ZoomButtonIcon() {
   return (
     <span className="grid size-9 place-items-center [filter:drop-shadow(0_0_6px_rgb(0_0_0/0.9))]">
       <MouseClickIcon />
-      <FaceButtonIcon device="xbox" pulsing>
-        <path d="M8.5 8.5 15.5 15.5M15.5 8.5 8.5 15.5" stroke={XBOX_X_BLUE} strokeWidth="2.4" />
-      </FaceButtonIcon>
-      <FaceButtonIcon device="playstation" pulsing>
-        <rect
-          x="8.25"
-          y="8.25"
-          width="7.5"
-          height="7.5"
-          fill="none"
-          stroke={PLAYSTATION_SQUARE_PINK}
-          strokeWidth="1.8"
-        />
-      </FaceButtonIcon>
+      <TriggerButtonIcon device="xbox" label={XBOX_RIGHT_TRIGGER} pulsing />
+      <TriggerButtonIcon device="playstation" label={PLAYSTATION_RIGHT_TRIGGER} pulsing />
     </span>
   )
 }

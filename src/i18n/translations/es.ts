@@ -10,7 +10,8 @@ export const es: GameText = {
   prompt: { lead: "PULSA", trail: "" },
   zoom: "ZooM",
   reading: {
-    close: "CERRAR",
+    closeWithKey: "PULSA CUALQUIER TECLA",
+    closeWithButton: "PULSA CUALQUIER BOTÓN",
     guideTitle: "Cómo escapar:",
     guideLines: [
       "Mira con atención. No pases por alto ninguna aparición.",

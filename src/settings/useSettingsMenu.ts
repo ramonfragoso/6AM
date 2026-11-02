@@ -1,5 +1,5 @@
 import { type RefObject, useEffect, useRef, useState } from "react"
-import { closeReading, reading } from "@/guides/noteReading"
+import { closeReading, reading, readingJustClosed } from "@/guides/noteReading"
 import { readGamepad } from "@/input/gamepad"
 import {
   dpadVertical,
@@ -24,9 +24,12 @@ import {
 } from "./menuNavigation"
 import {
   backOutOfSettings,
+  backOutWithEscape,
+  canLockPointer,
   canOpenSettings,
   closeSettings,
   inGame,
+  lockGamePointer,
   openSettings,
   settingsMenu,
   settingsMenuEvents,
@@ -36,6 +39,8 @@ import {
 const ESCAPE = "Escape"
 
 const UNLOCK_ESCAPE_GRACE_MS = 300
+
+const TEXT_FIELDS: ReadonlySet<string> = new Set(["INPUT", "TEXTAREA", "SELECT"])
 
 const SCROLL_SCREENS_PER_SECOND = 1.2
 
@@ -48,6 +53,7 @@ export function useSettingsMenu(menu: RefObject<HTMLElement | null>) {
   useEffect(() => settingsMenuEvents.listen(setState), [])
   useOpenOnPointerUnlock(openedAt)
   useEscapeKey(openedAt)
+  useLockOnKey()
   useGamepadMenu(menu)
   useFocusOnPage(menu, state)
   usePlayerVolume()
@@ -59,10 +65,7 @@ function useOpenOnPointerUnlock(openedAt: RefObject<number>) {
   useEffect(() => {
     function handleUnlock() {
       if (document.pointerLockElement) return
-      if (reading()) {
-        closeReading()
-        return
-      }
+      closeReading()
       if (!canOpenSettings()) return
       openedAt.current = performance.now()
       openSettings()
@@ -79,13 +82,35 @@ function useEscapeKey(openedAt: RefObject<number>) {
       if (event.code !== ESCAPE || event.repeat || document.pointerLockElement) return
       if (performance.now() - openedAt.current < UNLOCK_ESCAPE_GRACE_MS) return
       if (languageListOpen()) closeLanguageList()
-      else if (settingsMenu.open) backOutOfSettings()
-      else if (canOpenSettings()) openSettings()
+      else if (settingsMenu.open) backOutWithEscape()
+      else {
+        closeReading()
+        if (canOpenSettings()) openSettings()
+      }
     }
 
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [openedAt])
+}
+
+function useLockOnKey() {
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.code === ESCAPE || event.repeat || document.pointerLockElement) return
+      if (typesText(event.target) || !canLockPointer()) return
+      lockGamePointer()
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [])
+}
+
+function typesText(target: EventTarget | null) {
+  return (
+    target instanceof HTMLElement && (target.isContentEditable || TEXT_FIELDS.has(target.tagName))
+  )
 }
 
 function useGamepadMenu(menu: RefObject<HTMLElement | null>) {
@@ -107,7 +132,7 @@ function useGamepadMenu(menu: RefObject<HTMLElement | null>) {
       const pressed = (button: keyof MenuButtons) => buttons[button] && !held[button]
       held = buttons
       if (!settingsMenu.open) {
-        if (pressed("north") && canOpenSettings()) {
+        if (pressed("north") && canOpenSettings() && !readingJustClosed()) {
           openSettings()
           if (menu.current) focusFirstRow(menu.current)
         }

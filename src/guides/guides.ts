@@ -1,6 +1,6 @@
 import { type Box3, Matrix4, Vector3 } from "three"
 import { HAUNTS } from "@/haunts/allHaunts"
-import { nightSession } from "@/night/night"
+import { nightSession, uncaughtHaunts } from "@/night/night"
 import { loopState } from "@/passage/loopState"
 
 export const GUIDES_URL = "/models/guides.glb"
@@ -74,7 +74,8 @@ export function noteShown(note: Note) {
 }
 
 export function hauntsLeft() {
-  return Math.min(nightSession.hauntsLeft, HAUNT_COUNT_TEXTURE_URLS.length)
+  const enteringWay = loopState.passing ? loopState.enteringWay : null
+  return Math.min(uncaughtHaunts(enteringWay), HAUNT_COUNT_TEXTURE_URLS.length)
 }
 
 function enteringRoom() {

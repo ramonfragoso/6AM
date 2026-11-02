@@ -1,10 +1,10 @@
 import { hauntCountText } from "@/i18n/text"
 import { useFrame } from "@react-three/fiber"
-import { type RefObject, useCallback, useRef } from "react"
+import { type RefObject, useCallback, useEffect, useRef } from "react"
 import { MathUtils } from "three"
 import { useViewpoint } from "@/debugPlayer/useViewpoint"
 import { strangling } from "@/ghost/strangleView"
-import { readGamepad } from "@/input/gamepad"
+import { anyButtonPressed, readGamepad } from "@/input/gamepad"
 import { readAxis, type InputAxis } from "@/input/inputAxis"
 import { useDeviceData } from "@/input/useDeviceData"
 import { useHeldKeys } from "@/input/useHeldKeys"
@@ -15,7 +15,7 @@ import { settingsOpen } from "@/settings/settingsMenu"
 import { playing } from "@/title/title"
 import { READ_NOTES_PRIORITY } from "@/world/physicsSettings"
 import { hauntsLeft, type Note } from "./guides"
-import { aimedNote, noteReading } from "./noteReading"
+import { aimedNote, closeReading, noteReading } from "./noteReading"
 import { type ReadingSettings, useReadingTuning } from "./useGuidesTuning"
 
 export const READING_DARK_PROPERTY = "--reading-dark"
@@ -30,7 +30,7 @@ const TOGGLE: InputAxis = {
   gamepad: (gamepad) => (gamepad.pressed("south") ? 1 : 0),
 }
 
-const CLOSE: InputAxis = { negativeKeys: [], positiveKeys: ["Escape"], gamepad: () => 0 }
+const ESCAPE = "Escape"
 
 const PRESSED = 0.5
 
@@ -51,11 +51,11 @@ export function useNoteReading(overlay: RefObject<HTMLElement | null>) {
   useFrame((_, delta) => {
     const { toggle, close } = readControls()
     const free = viewed && canRead()
-    if (!free) noteReading.open = null
+    if (!free) closeReading()
     const open = noteReading.open
     noteReading.aimed = free && !open ? aimedNote(playerPose.eye, playerPose.yaw, settings) : null
-    if (open && (toggle || close)) {
-      noteReading.open = null
+    if (open && close) {
+      closeReading()
       noteReading.aimed = open
     } else if (!open && toggle && noteReading.aimed) {
       showNote(overlay.current, noteReading.aimed)
@@ -69,19 +69,40 @@ export function useNoteReading(overlay: RefObject<HTMLElement | null>) {
 
 function useReadingControls() {
   const heldKeys = useHeldKeys()
-  const wasHeld = useRef({ toggle: false, close: false })
+  const keyPressed = useKeyPressedSinceLastFrame()
+  const wasHeld = useRef({ toggle: false, button: false })
 
   return useCallback(() => {
     const gamepad = readGamepad()
     const toggle = readAxis(TOGGLE, heldKeys.current, gamepad) > PRESSED
-    const close = readAxis(CLOSE, heldKeys.current, gamepad) > PRESSED
+    const button = anyButtonPressed(gamepad)
     const pressed = {
       toggle: toggle && !wasHeld.current.toggle,
-      close: close && !wasHeld.current.close,
+      close: keyPressed() || (button && !wasHeld.current.button),
     }
-    wasHeld.current = { toggle, close }
+    wasHeld.current = { toggle, button }
     return pressed
-  }, [heldKeys])
+  }, [heldKeys, keyPressed])
+}
+
+function useKeyPressedSinceLastFrame() {
+  const pressed = useRef(false)
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.repeat || event.code === ESCAPE) return
+      pressed.current = true
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [])
+
+  return useCallback(() => {
+    const taken = pressed.current
+    pressed.current = false
+    return taken
+  }, [])
 }
 
 function canRead() {

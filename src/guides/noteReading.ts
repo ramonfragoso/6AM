@@ -15,8 +15,17 @@ export function reading() {
   return noteReading.open !== null
 }
 
+const CLOSING_GRACE_MS = 150
+
+let closedAt = Number.NEGATIVE_INFINITY
+
 export function closeReading() {
+  if (noteReading.open) closedAt = performance.now()
   noteReading.open = null
+}
+
+export function readingJustClosed() {
+  return performance.now() - closedAt < CLOSING_GRACE_MS
 }
 
 export function aimedNote(eye: Vector3, yaw: number, { reach, facing }: ReadingReach) {

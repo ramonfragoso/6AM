@@ -10,7 +10,8 @@ export const ja: GameText = {
   prompt: { lead: "", trail: "を押す" },
   zoom: "ズーム",
   reading: {
-    close: "閉じる",
+    closeWithKey: "いずれかのキーを押す",
+    closeWithButton: "いずれかのボタンを押す",
     guideTitle: "脱出するには：",
     guideLines: [
       "よく見ること。怪異をひとつも見逃さないこと。",

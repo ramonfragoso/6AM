@@ -109,6 +109,10 @@ export function readGamepad(): GamepadState {
   }
 }
 
+export function anyButtonPressed(gamepad: GamepadState) {
+  return GAMEPAD_BUTTONS.some(gamepad.pressed)
+}
+
 export function gamepadTouched(gamepad: GamepadState) {
   const sticks = [gamepad.leftStick, gamepad.rightStick]
   return (

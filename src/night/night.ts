@@ -61,7 +61,6 @@ export type NightSession = {
   loopsEnded: number
   nightsWon: number
   caught: Set<string>
-  hauntsLeft: number
 }
 
 type LoopStart = { forced: boolean; number: number; hour: number }
@@ -74,7 +73,6 @@ export const nightSession: NightSession = {
   loopsEnded: 0,
   nightsWon: 0,
   caught: new Set(),
-  hauntsLeft: HAUNTS.length,
 }
 
 const drawSettings: NightDrawSettings = {
@@ -144,6 +142,20 @@ export function endLoop(way: Way) {
   chooseLoop()
 }
 
+export function uncaughtHaunts(enteringWay: Way | null) {
+  return HAUNTS.length - nightSession.caught.size - (enteringWay && catches(enteringWay) ? 1 : 0)
+}
+
+function catches(way: Way) {
+  const { loop } = nightState
+  return (
+    loop.haunt !== null &&
+    loop.stage === "manifested" &&
+    passes(loop.outcome, way) &&
+    !nightSession.caught.has(loop.haunt.id)
+  )
+}
+
 export function bringsDawn(way: Way) {
   return (
     nightState.phase === "playing" &&
@@ -200,7 +212,6 @@ function beginNight() {
     standings: freshStandings(),
     refills: freshRefills(),
   })
-  nightSession.hauntsLeft = HAUNTS.length - nightSession.caught.size
   setClockHour(0)
   chooseLoop()
 }

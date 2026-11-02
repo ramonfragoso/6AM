@@ -9,7 +9,8 @@ export const zhCN: GameText = {
   prompt: { lead: "按", trail: "" },
   zoom: "缩放",
   reading: {
-    close: "关闭",
+    closeWithKey: "按任意键",
+    closeWithButton: "按任意按钮",
     guideTitle: "如何逃脱：",
     guideLines: [
       "仔细观察。不要错过任何灵异现象。",

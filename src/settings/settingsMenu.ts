@@ -45,9 +45,7 @@ export function openSettings() {
 }
 
 export function closeSettings() {
-  if (!settingsMenu.open) return
-  closedAt = performance.now()
-  show({ open: false, page: "main" })
+  if (!hideSettings()) return
   if (inGame()) lockGamePointer()
 }
 
@@ -60,12 +58,24 @@ export function backOutOfSettings() {
   else closeSettings()
 }
 
+export function backOutWithEscape() {
+  if (settingsMenu.page === "credits") showSettingsPage("main")
+  else hideSettings()
+}
+
+function hideSettings() {
+  if (!settingsMenu.open) return false
+  closedAt = performance.now()
+  show({ open: false, page: "main" })
+  return true
+}
+
 function show(next: SettingsMenuState) {
   Object.assign(settingsMenu, next)
   settingsMenuEvents.emit({ ...settingsMenu })
 }
 
-function lockGamePointer() {
+export function lockGamePointer() {
   document.querySelector(GAME_CANVAS)?.requestPointerLock().catch(ignoreRefusedLock)
 }
 

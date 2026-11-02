@@ -10,7 +10,8 @@ export const ar: GameText = {
   prompt: { lead: "اضغط", trail: "" },
   zoom: "تكبير",
   reading: {
-    close: "إغلاق",
+    closeWithKey: "اضغط أي مفتاح",
+    closeWithButton: "اضغط أي زر",
     guideTitle: "كيف تهرب:",
     guideLines: [
       "انظر بعناية. لا تفوّت أي ظاهرة غريبة.",

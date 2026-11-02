@@ -10,7 +10,8 @@ export const ptBR: GameText = {
   prompt: { lead: "PRESSIONE", trail: "" },
   zoom: "ZooM",
   reading: {
-    close: "FECHAR",
+    closeWithKey: "PRESSIONE QUALQUER TECLA",
+    closeWithButton: "PRESSIONE QUALQUER BOTÃO",
     guideTitle: "Como escapar:",
     guideLines: [
       "Olhe com atenção. Não deixe passar nenhuma assombração.",

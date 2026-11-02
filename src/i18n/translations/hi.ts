@@ -10,7 +10,8 @@ export const hi: GameText = {
   prompt: { lead: "", trail: "दबाएँ" },
   zoom: "ज़ूम",
   reading: {
-    close: "बंद करें",
+    closeWithKey: "कोई भी कुंजी दबाएँ",
+    closeWithButton: "कोई भी बटन दबाएँ",
     guideTitle: "बचकर कैसे निकलें:",
     guideLines: [
       "ध्यान से देखें। कोई भी भूतिया घटना छूटनी नहीं चाहिए।",

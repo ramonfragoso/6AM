@@ -1,13 +1,10 @@
 import type { Ref } from "react"
 import { useText } from "@/i18n/text"
-import { SouthButtonIcon } from "@/input/SouthButtonIcon"
 import {
   HAUNT_COUNT_TEXT_ATTRIBUTE,
   READING_DARK_PROPERTY,
   READING_TEXT_PROPERTY,
 } from "./useNoteReading"
-
-const CLOSE_KEY = "esc"
 
 const SHADOWED_TEXT = "[text-shadow:0_0_14px_rgb(0_0_0/0.95),0_0_3px_rgb(0_0_0)]"
 
@@ -15,7 +12,7 @@ type NoteReadingProps = { ref: Ref<HTMLDivElement> }
 
 export function NoteReading({ ref }: NoteReadingProps) {
   const { text, dir } = useText()
-  const { guideTitle, guideLines, close } = text.reading
+  const { guideTitle, guideLines, closeWithKey, closeWithButton } = text.reading
 
   return (
     <div
@@ -46,10 +43,9 @@ export function NoteReading({ ref }: NoteReadingProps) {
           {...{ [HAUNT_COUNT_TEXT_ATTRIBUTE]: "" }}
           className="hidden text-2xl leading-relaxed tracking-[0.1em] group-data-[note=hauntCount]:block"
         />
-        <p className="flex items-center gap-[0.4em] text-lg tracking-[0.2em] text-white/70">
-          {close}
-          <span className="hidden group-data-[device=mouse]:inline">{CLOSE_KEY}</span>
-          <SouthButtonIcon />
+        <p className="text-lg tracking-[0.2em] text-white/70">
+          <span className="hidden group-data-[device=mouse]:inline">{closeWithKey}</span>
+          <span className="group-data-[device=mouse]:hidden">{closeWithButton}</span>
         </p>
       </div>
     </div>

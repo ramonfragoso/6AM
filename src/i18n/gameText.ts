@@ -12,7 +12,8 @@ export type GameText = {
   prompt: { lead: string; trail: string }
   zoom: string
   reading: {
-    close: string
+    closeWithKey: string
+    closeWithButton: string
     guideTitle: string
     guideLines: string[]
     hauntCount: PluralForms
