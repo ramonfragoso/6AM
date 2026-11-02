@@ -137,7 +137,6 @@ export function usePassage(rig: PlayerRig, prompt: RefObject<HTMLElement | null>
         fillWithDawnLight(door.doorway)
         loopState.lampRoom = otherRoom(room)
       } else if (door.entering) loopState.lampRoom = room
-      loopState.enteringWay = door.entering ? (way ?? null) : null
       loopState.passing = true
       rig.body.current?.setEnabled(false)
     },

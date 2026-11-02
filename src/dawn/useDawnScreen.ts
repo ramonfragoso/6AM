@@ -1,5 +1,6 @@
 import { type RefObject, useCallback, useEffect, useRef, useState } from "react"
 import { readGamepad } from "@/input/gamepad"
+import { useLastInputDevice } from "@/input/useLastInputDevice"
 import { type InputAxis, readAxis } from "@/input/inputAxis"
 import { useHeldKeys } from "@/input/useHeldKeys"
 import { startNight } from "@/night/night"
@@ -10,6 +11,7 @@ import { BUSES, type Bus } from "@/sound/sounds"
 import { creditsMoment, type CreditsMoment, rollPlacement } from "./credits"
 import { creditsLook, creditsTextShadow, rollTextShadow } from "./creditsLook"
 import { dawnEvents } from "./dawnEvents"
+import { dawnsReached, recordDawn } from "./dawnsReached"
 import { clearDawnLight, dawnLight, whitenessAt } from "./dawnLight"
 import { dawnLightSettings } from "./dawnLightSettings"
 import { coverScene } from "./dawnScreenCover"
@@ -31,13 +33,28 @@ type MusicState = "waiting" | "playing" | "silent"
 
 type MeasuredHeights = { content: number; closing: number }
 
-type CreditsClock = { since: number; from: number; music: MusicState }
+type CreditsClock = {
+  since: number
+  from: number
+  music: MusicState
+  skippedBy: number
+}
+
+export type SkipState = "none" | "offered" | "used"
 
 const PLAY_AGAIN: InputAxis = {
   negativeKeys: [],
   positiveKeys: ["KeyE", "Enter"],
   gamepad: (gamepad) => (gamepad.pressed("south") ? 1 : 0),
 }
+
+const SKIP: InputAxis = {
+  negativeKeys: [],
+  positiveKeys: ["KeyE"],
+  gamepad: (gamepad) => (gamepad.pressed("west") ? 1 : 0),
+}
+
+const NOT_SKIPPED = 0
 
 const PRESSED = 0.5
 
@@ -73,6 +90,8 @@ const CLEARED: CreditsMoment = {
 
 export function useDawnScreen() {
   const [stage, setStage] = useState<DawnStage>("hidden")
+  const [skipState, setSkipState] = useState<SkipState>("none")
+  const skipButton = useRef<HTMLButtonElement>(null)
   const stageRef = useRef<DawnStage>("hidden")
   const timer = useRef<number | undefined>(undefined)
   const clock = useRef<CreditsClock | null>(null)
@@ -103,11 +122,17 @@ export function useDawnScreen() {
   )
 
   const rollCredits = useCallback(
-    (from: number, musicDelay: number) => {
+    (from: number, musicDelay: number, skippable: boolean) => {
       stopEndingMusic()
       document.exitPointerLock()
       fadeBuses(FADED_IN_THE_LIGHT, SILENT, dawnTiming.fadeOut)
-      clock.current = { since: secondsNow() - musicDelay, from, music: "waiting" }
+      clock.current = {
+        since: secondsNow() - musicDelay,
+        from,
+        music: "waiting",
+        skippedBy: NOT_SKIPPED,
+      }
+      setSkipState(skippable ? "offered" : "none")
       moveTo("credits")
     },
     [moveTo],
@@ -116,7 +141,11 @@ export function useDawnScreen() {
   useEffect(
     () =>
       nightEvents.listen((event) => {
-        if (event.kind === "dawn") rollCredits(0, 0)
+        if (event.kind === "dawn") {
+          const beatenBefore = dawnsReached() > 0
+          recordDawn()
+          rollCredits(0, 0, beatenBefore)
+        }
         if (event.kind === "newNight" && stageRef.current !== "hidden") {
           stopEndingMusic()
           clearDawnLight()
@@ -132,7 +161,7 @@ export function useDawnScreen() {
     () =>
       dawnEvents.listen(({ from }) => {
         clearDawnLight()
-        rollCredits(from, dawnTiming.musicDelay)
+        rollCredits(from, dawnTiming.musicDelay, dawnsReached() > 0)
       }),
     [rollCredits],
   )
@@ -147,12 +176,25 @@ export function useDawnScreen() {
     startNight()
   }, [])
 
-  usePlayAgainPress(stage === "shown", heldKeys, playAgain)
+  const skip = useCallback(() => {
+    const running = clock.current
+    if (!running || stageRef.current !== "credits") return
+    running.skippedBy = Math.max(dawnTiming.rollCentered - creditsSeconds(running), NOT_SKIPPED)
+    setSkipState("used")
+  }, [])
+
+  const skipOffered = skipState === "offered" && stage === "credits"
+  usePress(stage === "shown", PLAY_AGAIN, heldKeys, playAgain)
+  usePress(skipOffered, SKIP, heldKeys, skip)
+  useDeviceOf(skipButton, skipOffered)
 
   return {
     stage,
     parts,
     playAgain,
+    skip,
+    skipOffered,
+    skipButton,
     fadeSeconds: dawnTiming.fadeIn,
   }
 }
@@ -174,7 +216,9 @@ function useCreditsFrames(
         return
       }
       const running = clock.current
-      const moment = running ? creditsMoment(creditsSeconds(running), dawnTiming) : CLEARED
+      const moment = running
+        ? creditsMoment(creditsSeconds(running) + running.skippedBy, dawnTiming)
+        : CLEARED
       applyLook(screen.current)
       setOpacity(white.current, moment.white)
       setOpacity(title.current, moment.title ? SHOWN : HIDDEN)
@@ -278,25 +322,42 @@ function secondsNow() {
   return performance.now() / MILLISECONDS
 }
 
-function usePlayAgainPress(
+function usePress(
   listening: boolean,
+  axis: InputAxis,
   heldKeys: ReturnType<typeof useHeldKeys>,
-  playAgain: () => void,
+  action: () => void,
 ) {
   useEffect(() => {
     if (!listening) return
-    const isHeld = () => readAxis(PLAY_AGAIN, heldKeys.current, readGamepad()) > PRESSED
+    const isHeld = () => readAxis(axis, heldKeys.current, readGamepad()) > PRESSED
     let wasHeld = isHeld()
     let frame = 0
     const poll = () => {
       const held = isHeld()
-      if (held && !wasHeld) playAgain()
+      if (held && !wasHeld) action()
       wasHeld = held
       frame = window.requestAnimationFrame(poll)
     }
     frame = window.requestAnimationFrame(poll)
     return () => window.cancelAnimationFrame(frame)
-  }, [listening, heldKeys, playAgain])
+  }, [listening, axis, heldKeys, action])
+}
+
+function useDeviceOf(element: RefObject<HTMLElement | null>, listening: boolean) {
+  const readDevice = useLastInputDevice()
+  useEffect(() => {
+    if (!listening) return
+    let frame = 0
+    const poll = () => {
+      const device = readDevice(readGamepad())
+      const target = element.current
+      if (target && target.dataset.device !== device) target.dataset.device = device
+      frame = window.requestAnimationFrame(poll)
+    }
+    frame = window.requestAnimationFrame(poll)
+    return () => window.cancelAnimationFrame(frame)
+  }, [element, listening, readDevice])
 }
 
 function ignoreRefusedLock() {}

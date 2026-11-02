@@ -1,12 +1,15 @@
 import { useText } from "@/i18n/text"
+import { WestButtonIcon } from "@/input/WestButtonIcon"
 import { BELOW_SCREEN, DEVELOPER_CREDIT, GAME_TITLE } from "./credits"
 import { CreditsRoll } from "./CreditsRoll"
 import { useDawnScreen } from "./useDawnScreen"
 
 const INSTANT = "0s"
 
+const SKIP_KEY = "e"
+
 export function DawnScreen() {
-  const { stage, parts, playAgain, fadeSeconds } = useDawnScreen()
+  const { stage, parts, playAgain, skip, skipOffered, skipButton, fadeSeconds } = useDawnScreen()
   const covered = stage === "credits" || stage === "shown"
   const shown = stage === "shown"
   const { text, dir } = useText()
@@ -43,6 +46,19 @@ export function DawnScreen() {
         <p className="text-[10vmin] leading-none tracking-[0.06em]">{DEVELOPER_CREDIT.name}</p>
       </div>
       <CreditsRoll ref={parts.roll} />
+      <button
+        ref={skipButton}
+        type="button"
+        data-device="mouse"
+        disabled={!skipOffered}
+        onClick={skip}
+        className={`group absolute end-[3vmin] top-[3vmin] flex items-center gap-[0.5em] rounded border border-black px-5 py-2 text-[2.4vh] tracking-[0.2em] text-black shadow-[0_0_2vmin_rgb(255_255_255)] transition-opacity duration-700 [text-shadow:var(--credits-roll-shadow)] focus-visible:outline-2 focus-visible:outline-black ${skipOffered ? "pointer-events-auto" : ""}`}
+        style={{ opacity: skipOffered ? 1 : 0 }}
+      >
+        {text.credits.skip}
+        <span className="hidden group-data-[device=mouse]:inline">{SKIP_KEY}</span>
+        <WestButtonIcon />
+      </button>
       <div
         ref={parts.closing}
         className="absolute inset-x-0 top-0 flex flex-col will-change-transform items-center gap-[5vh] px-6 text-center text-black [text-shadow:var(--credits-roll-shadow)]"

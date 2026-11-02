@@ -40,6 +40,7 @@ export const ja: GameText = {
     developer: "開発",
     closing: "遊んでくれてありがとう",
     playAgain: "もう一度プレイ",
+    skip: "スキップ",
     headings: {
       music: "音楽",
       models: "モデル",

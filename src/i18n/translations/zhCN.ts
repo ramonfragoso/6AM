@@ -39,6 +39,7 @@ export const zhCN: GameText = {
     developer: "开发者",
     closing: "感谢游玩",
     playAgain: "再玩一次",
+    skip: "跳过",
     headings: {
       music: "音乐",
       models: "模型",

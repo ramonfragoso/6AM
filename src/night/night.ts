@@ -61,6 +61,7 @@ export type NightSession = {
   loopsEnded: number
   nightsWon: number
   caught: Set<string>
+  found: Set<string>
 }
 
 type LoopStart = { forced: boolean; number: number; hour: number }
@@ -73,13 +74,15 @@ export const nightSession: NightSession = {
   loopsEnded: 0,
   nightsWon: 0,
   caught: new Set(),
+  found: new Set(),
 }
 
 const drawSettings: NightDrawSettings = {
   odds: { atMidnight: EVEN_WEIGHTS, atSix: EVEN_WEIGHTS },
   enabledRules: new Set(),
   finalHour: FINAL_HOUR,
-  caught: nightSession.caught,
+  found: nightSession.found,
+  newGamePlus: false,
   nextLoop: DRAW,
   forcedOnce: null,
 }
@@ -122,6 +125,7 @@ export function endLoop(way: Way) {
     forced: loop.forced,
   })
   if (loop.haunt && manifested) {
+    nightSession.found.add(loop.haunt.id)
     if (passed) {
       catchHaunt(standings, loop.haunt)
       nightSession.caught.add(loop.haunt.id)
@@ -142,17 +146,14 @@ export function endLoop(way: Way) {
   chooseLoop()
 }
 
-export function uncaughtHaunts(enteringWay: Way | null) {
-  return HAUNTS.length - nightSession.caught.size - (enteringWay && catches(enteringWay) ? 1 : 0)
+export function unfoundHaunts(endingLoop: boolean) {
+  return HAUNTS.length - nightSession.found.size - (endingLoop && findsHaunt() ? 1 : 0)
 }
 
-function catches(way: Way) {
+function findsHaunt() {
   const { loop } = nightState
   return (
-    loop.haunt !== null &&
-    loop.stage === "manifested" &&
-    passes(loop.outcome, way) &&
-    !nightSession.caught.has(loop.haunt.id)
+    loop.haunt !== null && loop.stage === "manifested" && !nightSession.found.has(loop.haunt.id)
   )
 }
 
@@ -220,6 +221,7 @@ function chooseLoop() {
   resetHauntState()
   const choice = drawSettings.forcedOnce ?? drawSettings.nextLoop
   drawSettings.forcedOnce = null
+  drawSettings.newGamePlus = nightSession.nightsWon > 0
   const forced = choice !== DRAW
   const draw = forced
     ? forcedLoop(choice)

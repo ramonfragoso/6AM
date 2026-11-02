@@ -43,6 +43,7 @@ export const ptBR: GameText = {
     developer: "Desenvolvedor",
     closing: "Obrigado por jogar",
     playAgain: "Jogar de novo",
+    skip: "Pular",
     headings: {
       music: "Música",
       models: "Modelos",

@@ -1,4 +1,3 @@
-import type { Way } from "@/night/loops"
 import type { Doorway, Room } from "@/safeRoom/safeRooms"
 
 export type Whereabouts = "startRoom" | "house"
@@ -6,7 +5,6 @@ export type Whereabouts = "startRoom" | "house"
 export const loopState = {
   whereabouts: "startRoom" as Whereabouts,
   passing: false,
-  enteringWay: null as Way | null,
   startRoomFarDoor: false,
   leafAngles: {
     startNear: 0,

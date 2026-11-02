@@ -45,6 +45,7 @@ export const ar: GameText = {
     developer: "المطوّر",
     closing: "شكرًا لك على اللعب",
     playAgain: "العب مجددًا",
+    skip: "تخطي",
     headings: {
       music: "الموسيقى",
       models: "النماذج",

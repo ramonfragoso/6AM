@@ -43,6 +43,7 @@ export const es: GameText = {
     developer: "Desarrollador",
     closing: "Gracias por jugar",
     playAgain: "Jugar de nuevo",
+    skip: "Saltar",
     headings: {
       music: "Música",
       models: "Modelos",

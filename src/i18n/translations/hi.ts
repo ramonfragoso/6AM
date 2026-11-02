@@ -43,6 +43,7 @@ export const hi: GameText = {
     developer: "डेवलपर",
     closing: "खेलने के लिए धन्यवाद",
     playAgain: "फिर से खेलें",
+    skip: "छोड़ें",
     headings: {
       music: "संगीत",
       models: "मॉडल",

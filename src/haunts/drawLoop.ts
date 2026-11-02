@@ -11,7 +11,8 @@ export type DrawSettings = {
   odds: HauntOdds
   enabledRules: ReadonlySet<string>
   finalHour: number
-  caught: ReadonlySet<string>
+  found: ReadonlySet<string>
+  newGamePlus: boolean
 }
 
 export type FiredRule = { name: string; factors: Partial<OutcomeWeights> }
@@ -26,6 +27,8 @@ export type LoopDraw = {
 export type ForcedLoop = string
 
 const CLEAN_ONLY: OutcomeWeights = { loud: 0, subtle: 0, clean: 1 }
+
+const UNFOUND_CLEAN_SHARE = 0.5
 
 export function drawLoop(
   night: NightSoFar,
@@ -43,14 +46,19 @@ export function drawLoop(
     for (const outcome of LOOP_OUTCOMES) weights[outcome] *= factors[outcome] ?? 1
   }
   for (const kind of HAUNT_KINDS) if (pooledHaunts(kind, standings).length === 0) weights[kind] = 0
-  const odds = normalized(weights)
-  const outcome = pickOutcome(odds, random)
+  const unfound = settings.newGamePlus ? unfoundHaunts(standings, settings.found) : []
+  const normal = normalized(weights)
+  const odds = unfound.length > 0 ? withFewerCleanLoops(normal) : normal
+  const picked = pickOutcome(odds, random)
+  const previous = previousHaunt(night)
   const haunt =
-    outcome === "clean"
+    picked === "clean"
       ? null
-      : pickHaunt(outcome, standings, previousHaunt(night), settings.caught, random)
+      : unfound.length > 0
+        ? pickFrom(unfound, previous, random)
+        : pickFrom(pooledHaunts(picked, standings), previous, random)
   return {
-    outcome,
+    outcome: haunt?.kind ?? "clean",
     haunt,
     odds,
     fired,
@@ -102,17 +110,24 @@ function pickOutcome(odds: OutcomeWeights, random: () => number): LoopOutcome {
   return LOOP_OUTCOMES.findLast((outcome) => odds[outcome] > 0) ?? "clean"
 }
 
-function pickHaunt(
-  kind: HauntKind,
-  standings: Standings,
-  previous: string | null,
-  caught: ReadonlySet<string>,
-  random: () => number,
-) {
-  const pooled = pooledHaunts(kind, standings)
-  const choices = preferred(pooled, (haunt) => haunt.id !== previous)
-  const neverCaught = preferred(choices, (haunt) => !caught.has(haunt.id))
-  return neverCaught[Math.floor(random() * neverCaught.length)] ?? null
+function pickFrom(haunts: Haunt[], previous: string | null, random: () => number) {
+  const choices = preferred(haunts, (haunt) => haunt.id !== previous)
+  return choices[Math.floor(random() * choices.length)] ?? null
+}
+
+function unfoundHaunts(standings: Standings, found: ReadonlySet<string>) {
+  return HAUNT_KINDS.flatMap((kind) => pooledHaunts(kind, standings)).filter(
+    (haunt) => !found.has(haunt.id),
+  )
+}
+
+function withFewerCleanLoops(odds: OutcomeWeights): OutcomeWeights {
+  const drawable = HAUNT_KINDS.filter((kind) => odds[kind] > 0)
+  if (drawable.length === 0) return odds
+  const moved = odds.clean * (1 - UNFOUND_CLEAN_SHARE)
+  const fewer = { ...odds, clean: odds.clean - moved }
+  for (const kind of drawable) fewer[kind] += moved / drawable.length
+  return fewer
 }
 
 function preferred(haunts: Haunt[], wanted: (haunt: Haunt) => boolean) {

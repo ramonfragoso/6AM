@@ -43,6 +43,7 @@ export const fr: GameText = {
     developer: "Développeur",
     closing: "Merci d’avoir joué",
     playAgain: "Rejouer",
+    skip: "Passer",
     headings: {
       music: "Musique",
       models: "Modèles",

@@ -37,6 +37,7 @@ export type GameText = {
     developer: string
     closing: string
     playAgain: string
+    skip: string
     headings: Record<CreditHeading, string>
     ghostAnimations: string
     soundEffects: string
